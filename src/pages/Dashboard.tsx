@@ -10,17 +10,17 @@ export function DashboardPage() {
   ];
 
   const recentActivity = [
-    { id: '88211', description: 'Change Order Approved', client: 'Acme Corp', amount: '$1,250.00', status: 'Approved', time: '2h ago' },
+    { id: '88211', description: 'Scope Approved', client: 'Acme Corp', amount: '$1,250.00', status: 'Approved', time: '2h ago' },
     { id: '88212', description: 'New Scope Detected', client: 'Nexus Logistics', amount: '$850.00', status: 'Pending', time: '4h ago' },
     { id: '88213', description: 'Surcharge Paid', client: 'Meridian Shipping', amount: '$14,250.00', status: 'Success', time: 'Yesterday' },
-    { id: '88214', description: 'Change Order Sent', client: 'Global Partners', amount: '$2,100.00', status: 'Review', time: 'Yesterday' },
+    { id: '88214', description: 'Scope Sent', client: 'Global Partners', amount: '$2,100.00', status: 'Review', time: 'Yesterday' },
   ];
 
   return (
     <div className="max-w-container-max mx-auto py-8">
       <PageHeader 
         title="Dashboard" 
-        subtitle="Overview of your logistics performance and change orders."
+        subtitle="Overview of your logistics performance and scopes."
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">

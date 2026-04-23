@@ -51,7 +51,7 @@ export function ClientsPage() {
               <tr className="bg-surface-container-low border-b border-surface-container-highest">
                 <th className="py-3 px-6 font-label-caps text-secondary uppercase">Client Name</th>
                 <th className="py-3 px-6 font-label-caps text-secondary uppercase">Active Projects</th>
-                <th className="py-3 px-6 font-label-caps text-secondary uppercase">Change Orders</th>
+                <th className="py-3 px-6 font-label-caps text-secondary uppercase">Scopes</th>
                 <th className="py-3 px-6 font-label-caps text-secondary uppercase">Total Revenue</th>
                 <th className="py-3 px-6 font-label-caps text-secondary uppercase text-right">Actions</th>
               </tr>

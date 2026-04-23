@@ -1,6 +1,6 @@
 {
-  "name": "ScopeSurcharge",
-  "description": "Logistics & Surcharge management with AI-assisted scope extraction.",
+  "name": "ScopeGuard",
+  "description": "Logistics & Scope management with AI-assisted scope extraction.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

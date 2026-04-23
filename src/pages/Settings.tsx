@@ -37,7 +37,7 @@ export function SettingsPage() {
                 className="w-full bg-surface-container-lowest border border-surface-container-highest rounded-lg px-4 py-3 font-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-shadow" 
                 id="orgName" 
                 type="text" 
-                defaultValue="ScopeSurcharge Operations LLC"
+                defaultValue="ScopeGuard Operations LLC"
               />
             </div>
             

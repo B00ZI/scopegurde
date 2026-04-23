@@ -15,7 +15,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: '2',
     type: 'success',
-    title: 'Client Axiom Logistics approved Change Order #88492',
+    title: 'Client Axiom Logistics approved Scope #88492',
     message: 'Digital signature verified. The updated surcharge schedule for Q3 routing has been fully executed and is now active in the billing system.',
     time: '2 hours ago',
     unread: true,

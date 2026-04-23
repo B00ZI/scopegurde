@@ -125,7 +125,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
             <h3 className="font-h3 text-on-surface mb-8 border-b border-surface-container-highest pb-4">Scope Details</h3>
             <div className="space-y-6">
               <div>
-                <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Change Order Title</label>
+                <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Scope Title</label>
                 <input 
                   value={details.title}
                   onChange={(e) => setDetails({ ...details, title: e.target.value })}

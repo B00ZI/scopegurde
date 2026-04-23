@@ -80,9 +80,9 @@ export default function App() {
       />
       <div className="flex-1 flex flex-col min-h-screen">
         <TopBar 
-          onNewChangeOrder={() => setIsCreatingOrder(true)} 
+          onNewScope={() => setIsCreatingOrder(true)} 
           isSidebarCollapsed={isSidebarCollapsed} 
-          title={orderPreviewDetails ? 'Preview & Send' : isCreatingOrder ? 'Create Change Order' : undefined}
+          title={orderPreviewDetails ? 'Preview & Send' : isCreatingOrder ? 'Create New Scope' : undefined}
           onBack={orderPreviewDetails ? () => setOrderPreviewDetails(null) : isCreatingOrder ? () => setIsCreatingOrder(false) : undefined}
         />
         <main className={`flex-1 ${isSidebarCollapsed ? 'ml-20' : 'ml-64'} transition-all duration-300 ease-in-out px-8 pt-24 pb-8`}>

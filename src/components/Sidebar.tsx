@@ -20,7 +20,7 @@ export function Sidebar({ currentPage, onPageChange, isCollapsed, onToggleCollap
       <div className={`mb-8 flex items-center justify-between ${isCollapsed ? 'px-2' : 'px-3'}`}>
         {!isCollapsed && (
           <div className="overflow-hidden">
-            <h1 className="text-lg font-black tracking-tight text-on-surface whitespace-nowrap">ScopeSurcharge</h1>
+            <h1 className="text-lg font-black tracking-tight text-on-surface whitespace-nowrap">ScopeGuard</h1>
             <p className="font-sans text-sm font-medium text-secondary whitespace-nowrap">Logistics & Surcharge</p>
           </div>
         )}

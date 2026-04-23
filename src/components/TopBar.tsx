@@ -1,13 +1,13 @@
 import { ArrowLeft } from 'lucide-react';
 
 interface TopBarProps {
-  onNewChangeOrder: () => void;
+  onNewScope: () => void;
   isSidebarCollapsed: boolean;
   title?: string;
   onBack?: () => void;
 }
 
-export function TopBar({ onNewChangeOrder, isSidebarCollapsed, title, onBack }: TopBarProps) {
+export function TopBar({ onNewScope, isSidebarCollapsed, title, onBack }: TopBarProps) {
   return (
     <header 
       className={`bg-surface-container-lowest/80 backdrop-blur-md border-b border-surface-container-highest flex justify-between items-center h-16 px-8 fixed top-0 right-0 z-10 shadow-sm transition-all duration-300 ease-in-out ${
@@ -31,10 +31,10 @@ export function TopBar({ onNewChangeOrder, isSidebarCollapsed, title, onBack }: 
       
       {!onBack && (
         <button 
-          onClick={onNewChangeOrder}
+          onClick={onNewScope}
           className="bg-primary text-on-primary font-button px-5 py-2 rounded-lg hover:opacity-90 transition-all flex items-center gap-2 shadow-sm active:scale-95"
         >
-          New Change Order
+          + New Scope
         </button>
       )}
     </header>

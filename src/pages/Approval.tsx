@@ -119,7 +119,7 @@ export function ApprovalPage() {
           {/* Footer */}
           <div className="mt-8 text-center">
             <p className="font-body-sm text-secondary">
-              Powered by <span className="font-medium text-on-surface-variant">ScopeSurcharge</span>
+              Powered by <span className="font-medium text-on-surface-variant">ScopeGuard</span>
             </p>
           </div>
         </div>
