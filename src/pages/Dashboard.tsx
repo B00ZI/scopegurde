@@ -53,17 +53,17 @@ export function DashboardPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
               <input 
-                className="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-surface-container-highest rounded font-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all" 
+                className="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-surface-container-highest rounded-lg font-body-base text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all" 
                 placeholder="Search activity..." 
                 type="text"
               />
             </div>
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-surface-container-lowest border border-surface-container-highest rounded font-button text-on-surface flex items-center gap-2 hover:bg-surface-container-low transition-colors">
+              <button className="px-4 py-2 bg-surface-container-lowest border border-surface-container-highest rounded-lg font-button text-on-surface flex items-center gap-2 hover:bg-surface-container-low transition-colors">
                 <Filter className="w-4 h-4" />
                 Filters
               </button>
-              <button className="px-4 py-2 bg-surface-container-lowest border border-surface-container-highest rounded font-button text-on-surface flex items-center gap-2 hover:bg-surface-container-low transition-colors">
+              <button className="px-4 py-2 bg-surface-container-lowest border border-surface-container-highest rounded-lg font-button text-on-surface flex items-center gap-2 hover:bg-surface-container-low transition-colors">
                 <Download className="w-4 h-4" />
                 Export
               </button>

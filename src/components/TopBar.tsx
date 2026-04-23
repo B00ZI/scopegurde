@@ -1,4 +1,5 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Moon, Sun } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface TopBarProps {
   onNewScope: () => void;
@@ -8,6 +9,31 @@ interface TopBarProps {
 }
 
 export function TopBar({ onNewScope, isSidebarCollapsed, title, onBack }: TopBarProps) {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // Check initial preference
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      setIsDark(true);
+      document.documentElement.classList.add('dark');
+    } else {
+      setIsDark(false);
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    if (isDark) {
+      document.documentElement.classList.remove('dark');
+      localStorage.theme = 'light';
+      setIsDark(false);
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.theme = 'dark';
+      setIsDark(true);
+    }
+  };
+
   return (
     <header 
       className={`bg-surface-container-lowest/80 backdrop-blur-md border-b border-surface-container-highest flex justify-between items-center h-16 px-8 fixed top-0 right-0 z-10 shadow-sm transition-all duration-300 ease-in-out ${
@@ -25,18 +51,28 @@ export function TopBar({ onNewScope, isSidebarCollapsed, title, onBack }: TopBar
           </button>
         )}
         {title && (
-          <h2 className="font-sans text-lg font-bold text-on-surface tracking-tight">{title}</h2>
+          <h2 className="font-h3 text-on-surface">{title}</h2>
         )}
       </div>
       
-      {!onBack && (
-        <button 
-          onClick={onNewScope}
-          className="bg-primary text-on-primary font-button px-5 py-2 rounded-lg hover:opacity-90 transition-all flex items-center gap-2 shadow-sm active:scale-95"
+      <div className="flex items-center gap-4">
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-full hover:bg-surface-container text-secondary hover:text-on-surface transition-colors"
+          title="Toggle Theme"
         >
-          + New Scope
+          {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
         </button>
-      )}
+        {!onBack && (
+          <button 
+            onClick={onNewScope}
+            className="bg-primary text-on-primary font-button px-5 py-2.5 rounded-lg hover:opacity-90 transition-all flex items-center gap-2 shadow-sm active:scale-95"
+          >
+            + New Scope
+          </button>
+        )}
+      </div>
     </header>
   );
 }
+

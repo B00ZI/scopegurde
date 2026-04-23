@@ -287,7 +287,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
             <div className="space-y-4">
               <button 
                 onClick={() => onGenerate(details, tone)}
-                className="w-full bg-primary text-on-primary font-button px-4 py-3 rounded-lg shadow-sm hover:opacity-90 transition-colors flex justify-center items-center gap-2"
+                className="w-full bg-primary text-on-primary font-button px-4 py-2.5 rounded-lg shadow-sm hover:opacity-90 transition-colors flex justify-center items-center gap-2"
               >
                 Generate & Preview
                 <ArrowRight className="w-5 h-5" />
