@@ -2,6 +2,8 @@ import { Search, Filter, Download, MoreVertical, ChevronLeft, ChevronRight, Plus
 import { Client } from '../types';
 import { PageHeader } from '../components/PageHeader';
 
+// Mock data used to populate the table. In a real application, this would be fetched
+// using a data fetching hook (like React Query or SWR) connected to an API.
 const MOCK_CLIENTS: Client[] = [
   { id: 'CLT-2023-001', name: 'Acme Corp Logistics', email: 'logistics@acmecorp.com', activeProjects: 3, changeOrders: 12, totalRevenue: 45200 },
   { id: 'CLT-2023-042', name: 'Global Partners Inc.', email: 'ops@globalpartners.com', activeProjects: 1, changeOrders: 4, totalRevenue: 12850 },
@@ -9,9 +11,16 @@ const MOCK_CLIENTS: Client[] = [
   { id: 'CLT-2023-112', name: 'Nexus Logistics', email: 'nexus@logistics.com', activeProjects: 5, changeOrders: 7, totalRevenue: 31100 },
 ];
 
+/**
+ * PAGE COMPONENT: Clients Directory
+ * 
+ * Purpose: A typical CRM-style list view. Displays all managed clients in a table format.
+ * Features search and filter bars (currently aesthetic) and pagination controls.
+ */
 export function ClientsPage() {
   return (
     <div className="max-w-container-max mx-auto py-8">
+      {/* Header Injection */}
       <PageHeader 
         title="Clients Directory" 
         subtitle="Manage client profiles and active logistics projects."
@@ -23,6 +32,7 @@ export function ClientsPage() {
         }
       />
 
+      {/* SECTION 1: Toolbar (Search & Filters) */}
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
@@ -44,6 +54,7 @@ export function ClientsPage() {
         </div>
       </div>
 
+      {/* SECTION 2: Data Table */}
       <div className="bg-surface-container-lowest border border-surface-container-highest rounded-lg overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -72,6 +83,7 @@ export function ClientsPage() {
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2">
+                      {/* Status indicator dot */}
                       <span className={`w-2 h-2 rounded-full ${client.activeProjects > 0 ? 'bg-primary' : 'bg-outline-variant'}`}></span>
                       <span className="text-on-surface font-medium">{client.activeProjects}</span>
                     </div>
@@ -88,6 +100,7 @@ export function ClientsPage() {
             </tbody>
           </table>
         </div>
+        {/* Pagination Footer */}
         <div className="px-6 py-4 border-t border-surface-container-highest bg-surface-container-lowest flex items-center justify-between">
           <span className="font-body-sm text-secondary">Showing 1-4 of 42 clients</span>
           <div className="flex gap-1">

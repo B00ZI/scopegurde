@@ -3,26 +3,43 @@ import { ArrowLeft, Copy, Send, Loader2, Mail, MessageCircle, ChevronUp, Save, F
 import { generateClientMessage } from '../lib/gemini';
 
 interface PreviewSendProps {
+  // The structured payload generated in the previous step
   details: any;
   tone: string;
   onBack: () => void;
+  // Triggers the client-facing approval screen
   onPreviewPortal: () => void;
 }
 
+/**
+ * PAGE COMPONENT: Message Preview & Send
+ * 
+ * Purpose: This is the second step in the scope creation funnel.
+ * It takes the structured `details` payload, sends it to the AI to write a 
+ * polished client-facing message, and allows the admin to copy or "send" it.
+ */
 export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: PreviewSendProps) {
-  const [message, setMessage] = useState('');
-  const [isGenerating, setIsGenerating] = useState(true);
+  // --- Core State Variables ---
+  const [message, setMessage] = useState(''); // The generated AI string
+  const [isGenerating, setIsGenerating] = useState(true); // Loading state for LLM
+  
+  // UI States for secondary actions
   const [isSendMenuOpen, setIsSendMenuOpen] = useState(false);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * INITIALIZATION:
+   * As soon as this component mounts, it triggers the Gemini API to format 
+   * the structured details into a human-readable message.
+   */
   useEffect(() => {
     async function load() {
       try {
         const msg = await generateClientMessage(details, tone);
         setMessage(msg);
       } catch (error) {
-        console.error(error);
+        console.error('Failed to generate client message:', error);
       } finally {
         setIsGenerating(false);
       }
@@ -30,7 +47,10 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
     load();
   }, [details, tone]);
 
-  // Handle click outside send menu
+  /**
+   * UI UTILITY:
+   * Closes the "Send" delivery method dropdown if the user clicks loosely on the page.
+   */
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -41,15 +61,26 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  /**
+   * ACTION: Copy to Clipboard
+   * Provides immediate feedback to the user when they copy the AI drafted message.
+   */
   const handleCopy = () => {
     navigator.clipboard.writeText(message);
     setCopyStatus('Copied!');
-    setTimeout(() => setCopyStatus(null), 2000);
+    setTimeout(() => setCopyStatus(null), 2000); // Reset visual status
   };
 
+  /**
+   * UI UTILITY: Link interceptor
+   * The AI generates a text block containing a hardcoded demo link. 
+   * We intercept this rendering using Regex, turning the plain string URL into 
+   * a clickable <a> element that hooks back into our React state (onPreviewPortal).
+   */
   const renderMessageWithLinks = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     return text.split(urlRegex).map((part, i) => {
+      // If the string chunk matches a URL structure, render an interactive anchor
       if (part.match(urlRegex)) {
         return (
           <a 
@@ -59,8 +90,10 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
             rel="noopener noreferrer" 
             className="text-primary underline hover:text-primary-container transition-colors break-all"
             onClick={(e) => {
+              // Always override the default href behavior because this is a demo prototype
               e.preventDefault();
               if (part.includes('approval-portal')) {
+                // Trigger the React App state router
                 onPreviewPortal();
               }
             }}
@@ -69,13 +102,14 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
           </a>
         );
       }
-      return part;
+      return part; // Render standard text
     });
   };
 
   return (
     <div className="flex flex-col">
       <div className="flex-1 p-8 max-w-container-max mx-auto w-full flex flex-col gap-10">
+        {/* SECTION 1: Generated Preview Box */}
         <section className="flex flex-col gap-2 max-w-3xl mx-auto w-full">
           <div className="flex items-center justify-between">
             <h2 className="font-h2 text-on-surface">Final Message Preview</h2>
@@ -87,16 +121,19 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
           
           <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-10 mt-6 shadow-sm min-h-[400px] flex flex-col relative group">
             {isGenerating ? (
+              // Loading State while Gemini is working
               <div className="flex-1 flex flex-col items-center justify-center text-secondary gap-4">
                 <Loader2 className="w-8 h-8 animate-spin" />
                 <p className="font-body-base">AI is drafting your message...</p>
               </div>
             ) : (
+              // Success State
               <>
                 <div className="font-body-base text-on-surface space-y-4 leading-relaxed whitespace-pre-wrap font-sans">
                   {renderMessageWithLinks(message)}
                 </div>
                 {!isGenerating && (
+                  // Quick hover action for clipboard
                   <button 
                     onClick={handleCopy}
                     className="absolute top-4 right-4 p-2.5 rounded-lg bg-surface-container-highest border border-surface-container-highest text-on-surface hover:text-primary transition-all opacity-0 group-hover:opacity-100 flex items-center gap-2 shadow-sm"
@@ -109,6 +146,7 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
           </div>
         </section>
 
+        {/* SECTION 2: Action Footer (Save, Send, Routing options) */}
         <section className="mt-auto pt-10 pb-8 max-w-3xl mx-auto w-full flex flex-col sm:flex-row justify-end gap-4">
           <button 
             className="px-8 py-3 bg-surface-container-low border border-surface-container-highest text-on-surface hover:bg-surface-container-high rounded-lg font-button transition-all flex items-center justify-center gap-2 w-full sm:w-auto shadow-sm active:scale-95"
@@ -127,6 +165,7 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
               <ChevronUp className={`w-4 h-4 transition-transform duration-200 ${isSendMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
+            {/* Delivery Methods Dropdown */}
             {isSendMenuOpen && (
               <div className="absolute bottom-full right-0 mb-3 w-64 bg-surface-container-lowest border border-surface-container-highest rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
                 <div className="p-3 border-b border-surface-container-highest bg-surface-container-low">
@@ -158,6 +197,7 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
                     </div>
                   </button>
                   <div className="h-px bg-surface-container-highest my-1 mx-2" />
+                  {/* Important link for jumping to the Public Approval screen state */}
                   <button 
                     onClick={onPreviewPortal}
                     className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/5 text-primary transition-all text-left"

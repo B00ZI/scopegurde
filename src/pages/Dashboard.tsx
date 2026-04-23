@@ -1,7 +1,17 @@
 import { TrendingUp, Users, FileText, AlertCircle, ArrowUpRight, Search, Filter, Download, MoreVertical } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 
+/**
+ * PAGE COMPONENT: Dashboard Overview
+ * 
+ * Purpose: The default landing view. Provides a high-level summary of system 
+ * metrics and a timeline of recent scope changes.
+ * 
+ * Note: Data is currently mocked. In a production environment, this would be
+ * populated and mapped from an API endpoint or GraphQL query.
+ */
 export function DashboardPage() {
+  // Mock data for the top stat cards
   const stats = [
     { label: 'Total Revenue', value: '$242,500', trend: '+12.5%', icon: TrendingUp },
     { label: 'Active Clients', value: '42', trend: '+2', icon: Users },
@@ -9,6 +19,7 @@ export function DashboardPage() {
     { label: 'Detection Alerts', value: '3', trend: 'High', icon: AlertCircle, color: 'text-error' },
   ];
 
+  // Mock data for the recent activity table
   const recentActivity = [
     { id: '88211', description: 'Scope Approved', client: 'Acme Corp', amount: '$1,250.00', status: 'Approved', time: '2h ago' },
     { id: '88212', description: 'New Scope Detected', client: 'Nexus Logistics', amount: '$850.00', status: 'Pending', time: '4h ago' },
@@ -23,6 +34,7 @@ export function DashboardPage() {
         subtitle="Overview of your logistics performance and scopes."
       />
 
+      {/* Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {stats.map((stat) => (
           <div key={stat.label} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-6 shadow-sm">
@@ -42,6 +54,7 @@ export function DashboardPage() {
 
       <div className="flex flex-col gap-8">
         <div>
+          {/* Header & Global View CTA */}
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-h3 text-on-surface">Recent Activity</h3>
             <button className="text-primary font-button flex items-center gap-1 hover:underline">
@@ -49,6 +62,7 @@ export function DashboardPage() {
             </button>
           </div>
 
+          {/* Utility Bar: Search & Global Actions */}
           <div className="flex flex-col md:flex-row gap-4 mb-8">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
@@ -70,6 +84,7 @@ export function DashboardPage() {
             </div>
           </div>
 
+          {/* Data Table */}
           <div className="bg-surface-container-lowest border border-surface-container-highest rounded-lg overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -92,6 +107,7 @@ export function DashboardPage() {
                       <td className="py-4 px-6 text-on-surface">{row.client}</td>
                       <td className="py-4 px-6 text-on-surface font-medium">{row.amount}</td>
                       <td className="py-4 px-6">
+                        {/* Dynamic status pill styling */}
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${
                           row.status === 'Approved' || row.status === 'Success' ? 'bg-primary/10 text-primary' : 
                           row.status === 'Pending' ? 'bg-error/10 text-error' : 'bg-surface-container text-secondary'

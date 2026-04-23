@@ -1,12 +1,25 @@
 import { Check, Clock, Lock, Building2 } from 'lucide-react';
 
 interface ApprovalPortalProps {
+  // Contains the title, deliverables, and cost metadata
   details: any;
+  // Final actions (simulated in this environment)
   onApprove: () => void;
   onDecline: () => void;
 }
 
+/**
+ * PAGE COMPONENT: Client Approval Portal (PUBLIC FACING)
+ * 
+ * Purpose: This is the exact screen the end-client sees when they click the secure
+ * link sent to them in the WhatsApp/Email generated in the previous step.
+ * 
+ * Design Note: This intentionally uses a completely different layout structure 
+ * (no sidebar, centered, high-focus) compared to the Admin dashboard, reinforcing 
+ * that the user is now in a public-facing flow.
+ */
 export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPortalProps) {
+  // Simulate the current date for the invoice header
   const formattedDate = new Date().toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -17,7 +30,7 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
     <div className="min-h-screen bg-surface-container-low py-16 px-4 selection:bg-primary/20 font-sans">
       <div className="max-w-2xl mx-auto space-y-10">
         
-        {/* Brand Header */}
+        {/* Brand Header: Simulates the white-labeled agency name */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center justify-center w-12 h-12 bg-surface-container-lowest rounded-xl border border-surface-container-highest shadow-sm transition-transform hover:scale-105">
             <Building2 className="w-6 h-6 text-primary" />
@@ -28,10 +41,10 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
           </div>
         </div>
 
-        {/* Main Card */}
+        {/* Main Contract Card */}
         <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl shadow-xl overflow-hidden">
           
-          {/* Header Section */}
+          {/* Header Section: Title and Metadata */}
           <div className="p-10 space-y-4">
             <h2 className="text-[32px] font-extrabold text-on-surface leading-[1.15] tracking-tight">
               {details.title || 'Additional Revision Cycle'}
@@ -47,6 +60,7 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
             </div>
           </div>
 
+          {/* Scope Definitions Map: Parses the textarea input into bullet points */}
           <div className="border-t border-surface-container-highest">
             <div className="p-10 space-y-6">
               <h3 className="text-[11px] font-bold text-primary uppercase tracking-[0.2em]">What's Included</h3>
@@ -58,11 +72,14 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
                         <Check className="w-3.5 h-3.5 text-primary" strokeWidth={3} />
                       </div>
                       <span className="text-on-surface font-medium leading-relaxed">
+                        {/* Remove bullet markdown dashes if the user/AI included them */}
                         {line.replace(/^-\s*/, '')}
                       </span>
                     </li>
                   )
                 ))}
+                
+                {/* Fallback state if no deliverables are provided (primarily for the hardcoded dashboard demo button) */}
                 {!details.deliverables && (
                   <>
                     <li className="flex items-start gap-4">
@@ -83,7 +100,7 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
             </div>
           </div>
 
-          {/* Impact/Cost Bar */}
+          {/* Impact/Cost Bar: Highlights the most critical info for the client */}
           <div className="bg-surface-container-low border-t border-b border-surface-container-highest p-10">
             <div className="flex items-center justify-between gap-8">
               <div className="flex items-center gap-4">
@@ -105,16 +122,18 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
             </div>
           </div>
 
-          {/* Action Area */}
+          {/* Action Area: Approval Options */}
           <div className="p-10 space-y-8">
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row gap-4">
+                {/* Secondary Action: Defer payment */}
                 <button 
                   onClick={onApprove}
                   className="flex-[1] h-14 bg-surface-container text-on-surface font-bold rounded-xl hover:bg-surface-container-high transition-all active:scale-[0.98] border border-surface-container-highest"
                 >
                   Approve Only
                 </button>
+                {/* Primary Action: Immediate Settlement */}
                 <button 
                   onClick={onApprove}
                   className="flex-[2] h-14 bg-primary text-on-primary font-bold rounded-xl hover:opacity-90 transition-all active:scale-[0.98] flex items-center justify-center gap-3 shadow-lg shadow-primary/20"
@@ -124,6 +143,7 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
                 </button>
               </div>
               
+              {/* Legal confirmation notice for deferring payment */}
               <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
                 <p className="text-[11px] text-primary/80 leading-relaxed font-medium text-center">
                   Notice: By clicking <span className="font-bold underline">Approve Only</span>, you legally confirm the scope adjustments and agree to settle the balance of <span className="font-bold">${details.priceAdjustment || '850.00'}</span> within your standard billing cycle or as per our professional service agreement.
@@ -131,6 +151,7 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
               </div>
             </div>
 
+            {/* Security Badge */}
             <div className="flex items-center justify-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
               <p className="text-center text-[11px] text-secondary font-medium tracking-wide">

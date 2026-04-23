@@ -1,6 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
 @import "tailwindcss";
 
+/**
+ * GLOBAL THEME CONFIGURATION (Material Design 3 Inspired)
+ * 
+ * This file sets up the complete color system for the application, supporting both 
+ * light and dark modes. It maps semantic CSS variables to Tailwind classes.
+ */
+
 @theme {
   --color-background: var(--background);
   --color-on-background: var(--on-background);
@@ -9,12 +16,14 @@
   --color-on-surface: var(--on-surface);
   --color-on-surface-variant: var(--on-surface-variant);
   
+  /* Elevation system (lowest = pure white/pure dark, highest = strongest fill) */
   --color-surface-container-lowest: var(--surface-container-lowest);
   --color-surface-container-low: var(--surface-container-low);
   --color-surface-container: var(--surface-container);
   --color-surface-container-high: var(--surface-container-high);
   --color-surface-container-highest: var(--surface-container-highest);
   
+  /* Brand colors */
   --color-primary: var(--primary);
   --color-on-primary: var(--on-primary);
   --color-primary-container: var(--primary-container);
@@ -27,6 +36,7 @@
   --color-error-container: var(--error-container);
   --color-on-error-container: var(--on-error-container);
 
+  /* Border and line colors */
   --color-outline: var(--outline);
   --color-outline-variant: var(--outline-variant);
 
@@ -34,6 +44,7 @@
 }
 
 @layer base {
+  /* LIGHT MODE PALETTE (Default) */
   :root {
     --background: #f6fafe;
     --on-background: #171c1f;
@@ -45,7 +56,7 @@
     --surface-container: #eaeef2;
     --surface-container-high: #e4e9ed;
     --surface-container-highest: #dfe3e7;
-    --primary: #006948;
+    --primary: #006948; /* ScopeGuard Deep Green */
     --on-primary: #ffffff;
     --primary-container: #00855d;
     --on-primary-container: #f5fff7;
@@ -58,6 +69,7 @@
     --outline-variant: #bccac0;
   }
 
+  /* DARK MODE PALETTE */
   .dark {
     --background: #0d1411;
     --on-background: #e2e9e6;
@@ -69,7 +81,7 @@
     --surface-container: #17221d;
     --surface-container-high: #1d2a23;
     --surface-container-highest: #24352b;
-    --primary: #5ce6aa;
+    --primary: #5ce6aa; /* ScopeGuard Mint Green */
     --on-primary: #003825;
     --primary-container: #005439;
     --on-primary-container: #7cfadc;
@@ -87,6 +99,11 @@
   }
 }
 
+/* 
+ * TYPOGRAPHY SYSTEM
+ * Using utility classes for consistent font sizing across the application.
+ * Note the responsive `sm:` prefixes to automatically scale down on mobile.
+ */
 .font-h1 { @apply text-3xl sm:text-4xl font-bold leading-tight tracking-tight; }
 .font-h2 { @apply text-2xl sm:text-3xl font-semibold leading-snug tracking-tight; }
 .font-h3 { @apply text-lg sm:text-xl font-semibold leading-snug tracking-tight; }

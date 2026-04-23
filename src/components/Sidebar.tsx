@@ -1,13 +1,22 @@
 import { LayoutDashboard, Users, Bell, Settings, LogOut, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SidebarProps {
+  // Drives global app routing
   currentPage: string;
   onPageChange: (page: string) => void;
+  // Drives layout width updates across the app (Sidebar + TopBar width calculations)
   isCollapsed: boolean;
   onToggleCollapse: () => void;
 }
 
+/**
+ * COMPONENT: Global Sidebar Navigation
+ * 
+ * Purpose: Provides primary navigation links. It holds local configuration for 
+ * the nav items array mapping to the root router switch statement in App.tsx.
+ */
 export function Sidebar({ currentPage, onPageChange, isCollapsed, onToggleCollapse }: SidebarProps) {
+  // Primary navigation map. IDs directly match the case statements in `App.tsx -> renderContent`
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'clients', label: 'Clients', icon: Users },
@@ -17,6 +26,8 @@ export function Sidebar({ currentPage, onPageChange, isCollapsed, onToggleCollap
 
   return (
     <nav className={`bg-surface-container-lowest border-r border-surface-container-highest h-screen flex flex-col fixed left-0 top-0 py-6 transition-all duration-300 ease-in-out z-20 ${isCollapsed ? 'w-20 px-3' : 'w-64 px-4'}`}>
+      
+      {/* SECTION 1: Brand & Collapse Controls */}
       <div className={`mb-8 flex items-center justify-between ${isCollapsed ? 'px-2' : 'px-3'}`}>
         {!isCollapsed && (
           <div className="overflow-hidden">
@@ -32,6 +43,7 @@ export function Sidebar({ currentPage, onPageChange, isCollapsed, onToggleCollap
         </button>
       </div>
 
+      {/* SECTION 2: Navigation Links */}
       <ul className="flex flex-col gap-1.5">
         {menuItems.map((item) => (
           <li key={item.id}>
@@ -53,9 +65,12 @@ export function Sidebar({ currentPage, onPageChange, isCollapsed, onToggleCollap
         ))}
       </ul>
 
+      {/* SECTION 3: Current User Context Footer */}
       <div className="mt-auto pt-6 border-t border-surface-container-highest">
         <div className={`flex items-center justify-between gap-2 mb-4 ${isCollapsed ? 'flex-col px-0' : 'px-3'}`}>
           <div className={`flex items-center gap-3 overflow-hidden flex-nowrap ${isCollapsed ? 'flex-col' : ''}`}>
+            
+            {/* Dynamic Avatar using Picsum API for demo */}
             <div className="w-8 h-8 rounded-full bg-primary-container overflow-hidden border border-surface-container-highest flex-shrink-0">
               <img 
                 src="https://picsum.photos/seed/sarah/100/100" 

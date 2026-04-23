@@ -1,3 +1,10 @@
+/**
+ * GLOBAL TYPES
+ * 
+ * Defines the core data structures used across the application to ensure
+ * consistency between UI components and mocked API data logic.
+ */
+
 export interface Client {
   id: string;
   name: string;

@@ -1,5 +1,14 @@
 import { Building2, ClipboardList, Clock, CheckCircle } from 'lucide-react';
 
+/**
+ * PAGE COMPONENT: Hardcoded Client Approval Demo
+ * 
+ * Purpose: This was the original static mockup of the client approval page.
+ * It is currently linked to the floating "View Client Portal" button on the dashboard
+ * to serve as a fast structural preview.
+ * 
+ * Note: The live, dynamic version of this layout driven by AI output is `ApprovalPortal.tsx`.
+ */
 export function ApprovalPage() {
   return (
     <div className="bg-background min-h-screen text-on-background flex flex-col font-body-base">

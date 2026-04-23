@@ -2,6 +2,7 @@ import { AlertTriangle, CheckCircle, Banknote, CheckCheck, Activity, RefreshCw }
 import { Notification } from '../types';
 import { PageHeader } from '../components/PageHeader';
 
+// Mock data to demonstrate different notification severities and states
 const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: '1',
@@ -32,9 +33,17 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   }
 ];
 
+/**
+ * PAGE COMPONENT: Notifications / Inbox
+ * 
+ * Purpose: A timeline view of system events, alerts, and client actions.
+ * Features a split layout with the primary notification feed on the left and 
+ * system status widgets on the right.
+ */
 export function NotificationsPage() {
   return (
     <div className="max-w-container-max mx-auto py-8">
+      {/* Header Injection */}
       <PageHeader 
         title="Inbox" 
         subtitle="You have 2 unread items requiring attention."
@@ -48,8 +57,12 @@ export function NotificationsPage() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        
+        {/* LEFT COLUMN: Main Notification Feed */}
         <div className="md:col-span-8 flex flex-col gap-6">
           <h3 className="font-label-caps text-secondary uppercase mb-2 tracking-wider">Today</h3>
+          
+          {/* Dynamic mapping of 'Today' items */}
           {MOCK_NOTIFICATIONS.filter(n => n.id !== '3').map(notification => (
             <div 
               key={notification.id}
@@ -57,6 +70,7 @@ export function NotificationsPage() {
                 notification.type === 'warning' ? 'border-error/30 bg-error-container/5' : 'border-surface-container-highest'
               }`}
             >
+              {/* Visual indicator bar for warnings */}
               {notification.type === 'warning' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-error"></div>}
               
               <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
@@ -92,6 +106,7 @@ export function NotificationsPage() {
             </div>
           ))}
 
+          {/* Hardcoded 'Yesterday' item to demonstrate state dimming */}
           <h3 className="font-label-caps text-secondary uppercase mt-6 mb-2 tracking-wider">Yesterday</h3>
           <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-6 flex items-start gap-6 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer opacity-80 hover:opacity-100">
             <div className="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
@@ -114,10 +129,15 @@ export function NotificationsPage() {
           </div>
         </div>
 
+        {/* RIGHT COLUMN: Supplementary Dashboard Widgets */}
         <div className="md:col-span-4 flex flex-col gap-6">
+          
+          {/* Health Status Widget */}
           <div className="bg-surface-container-low border border-surface-container-highest rounded-xl p-6">
             <h3 className="font-h3 text-on-surface mb-6">System Health</h3>
+            
             <div className="flex flex-col gap-4">
+              {/* Active Sync State */}
               <div className="flex items-center justify-between">
                 <span className="font-body-base text-on-surface-variant">API Sync</span>
                 <span className="font-body-sm text-primary flex items-center gap-1">
@@ -128,6 +148,7 @@ export function NotificationsPage() {
                 <div className="bg-primary w-full h-full"></div>
               </div>
               
+              {/* Loading/Pending State */}
               <div className="flex items-center justify-between mt-2">
                 <span className="font-body-base text-on-surface-variant">Carrier Data Feeds</span>
                 <span className="font-body-sm text-secondary flex items-center gap-1">

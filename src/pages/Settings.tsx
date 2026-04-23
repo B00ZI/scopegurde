@@ -1,16 +1,24 @@
 import { CloudUpload, Landmark, ExternalLink, AlertCircle } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 
+/**
+ * PAGE COMPONENT: Global Configuration / Settings
+ * 
+ * Purpose: A standard configuration interface for managing the agency's overarching
+ * identity (names, logos) and 3rd party integrations (stripe, etc).
+ */
 export function SettingsPage() {
   return (
     <div className="max-w-3xl mx-auto w-full py-8">
+      {/* Header Injection */}
       <PageHeader 
         title="Settings" 
         subtitle="Manage your organization's identity and operational details."
       />
       
       <div className="flex flex-col gap-10">
-        {/* Profile Setup Section */}
+        
+        {/* SECTION 1: Profile Image & Text Inputs */}
         <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-6">
           <div className="mb-6">
             <h2 className="font-h2 text-on-surface mb-1">Organization Profile</h2>
@@ -18,7 +26,7 @@ export function SettingsPage() {
           </div>
           
           <div className="grid grid-cols-1 gap-10">
-            {/* Logo Upload Zone */}
+            {/* Logo Upload Zone (Aesthetic placeholder for drag-and-drop actions) */}
             <div className="flex flex-col gap-2">
               <label className="font-label-caps text-on-surface-variant uppercase tracking-wider">Company Logo</label>
               <div className="border-2 border-dashed border-surface-container-highest rounded-xl p-10 flex flex-col items-center justify-center bg-surface hover:bg-surface-container transition-colors cursor-pointer group">
@@ -30,7 +38,7 @@ export function SettingsPage() {
               </div>
             </div>
             
-            {/* Organization Name */}
+            {/* Standard Text Input */}
             <div className="flex flex-col gap-2">
               <label className="font-label-caps text-on-surface-variant uppercase tracking-wider" htmlFor="orgName">Legal Entity Name</label>
               <input 
@@ -49,7 +57,7 @@ export function SettingsPage() {
           </div>
         </section>
 
-        {/* Financial Integration Section */}
+        {/* SECTION 2: Integrations Display / OAuth Linking */}
         <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
             <div className="flex-1">
@@ -60,6 +68,8 @@ export function SettingsPage() {
               <p className="font-body-sm text-secondary mb-4 max-w-lg">
                 Connect your payment gateway to automate surcharge processing, manage disputes, and reconcile logistics billing in real-time.
               </p>
+              
+              {/* Alert State Component */}
               <div className="inline-flex items-center gap-2 bg-surface px-3 py-1.5 rounded border border-surface-container-highest">
                 <AlertCircle className="text-error w-4 h-4" />
                 <span className="font-body-sm text-on-surface font-medium">Gateway Not Configured</span>

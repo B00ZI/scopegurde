@@ -4,10 +4,13 @@ import { extractScopeFromBrainDump } from '../lib/gemini';
 import { PageHeader } from '../components/PageHeader';
 
 interface CreateChangeOrderProps {
-  onGenerate: (details: any, tone: string) => void;
+  // Callback when user is ready to see the finalized output
+  onGenerate: (details: any, tone: string) => void; 
+  // Callback to return to the dashboard
   onCancel: () => void;
 }
 
+// Mock client database - in a real app, this would be fetched from an API
 const INITIAL_CLIENTS = [
   { id: 'acme', name: 'Acme Corp', industry: 'Retail' },
   { id: 'globex', name: 'Globex Logistics', industry: 'Shipping' },
@@ -16,11 +19,21 @@ const INITIAL_CLIENTS = [
   { id: 'wayne', name: 'Wayne Enterprises', industry: 'Technology' },
 ];
 
+/**
+ * PAGE COMPONENT: Create Scope Wizard
+ * 
+ * Purpose: First step in the scope creation funnel. 
+ * Allows users to either manually type out structured scope details OR dump 
+ * raw meeting notes/emails into a textarea and have the Gemini AI automatically parse them.
+ */
 export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrderProps) {
+  // --- Core State Variables ---
   const [availableClients, setAvailableClients] = useState(INITIAL_CLIENTS);
-  const [brainDump, setBrainDump] = useState('');
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [tone, setTone] = useState('friendly');
+  const [brainDump, setBrainDump] = useState(''); // Raw, unstructured text input
+  const [isExtracting, setIsExtracting] = useState(false); // AI loading state
+  const [tone, setTone] = useState('friendly'); // AI generation tone preference
+  
+  // The final structured model that describes the scope. This handles both manual and AI-inferred inputs.
   const [details, setDetails] = useState({
     title: '',
     deliverables: '',
@@ -28,16 +41,21 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
     extraTimeDays: ''
   });
 
-  // Combobox State
+  // --- Combobox (Custom Dropdown) State ---
   const [clientSearch, setClientSearch] = useState('');
   const [selectedClient, setSelectedClient] = useState<typeof INITIAL_CLIENTS[0] | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Filter clients locally based on search input
   const filteredClients = availableClients.filter(client => 
     client.name.toLowerCase().includes(clientSearch.toLowerCase())
   );
 
+  /**
+   * Creates a new client gracefully and selects it if it doesn't exist in the list.
+   * This removes friction when a user gets a scope change from a totally new contract.
+   */
   const handleCreateClient = (name: string) => {
     const newClient = {
       id: `new-${Date.now()}`,
@@ -50,6 +68,9 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
     setClientSearch('');
   };
 
+  /**
+   * Global event listener to close the custom dropdown if the user clicks anywhere else
+   */
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -60,11 +81,19 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  /**
+   * AI PROCESSING ROUTINE:
+   * Takes the raw 'brainDump' text and passes it to the Gemini API (`extractScopeFromBrainDump`).
+   * Expects a strongly typed JSON Object in return, which is then mapped into the `details` state.
+   */
   const handleAIAction = async () => {
     if (!brainDump) return;
     setIsExtracting(true);
     try {
+      // 1. Call Gemini LLM (Input -> Processing)
       const extracted = await extractScopeFromBrainDump(brainDump);
+      
+      // 2. Map response to state (Processing -> State)
       setDetails({
         title: extracted.title || '',
         deliverables: extracted.deliverables?.join('\n') || '',
@@ -72,7 +101,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
         extraTimeDays: extracted.extraTimeDays?.toString() || ''
       });
     } catch (error) {
-      console.error(error);
+      console.error('Failed to extract data via AI:', error);
     } finally {
       setIsExtracting(false);
     }
@@ -80,13 +109,16 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
 
   return (
     <div className="max-w-container-max mx-auto py-8">
+      {/* Introduction text */}
       <div className="mb-8">
         <p className="font-sans text-sm font-medium text-secondary">Draft scope modifications using AI or manual entry.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Data Input (AI and Manual Forms) */}
         <div className="lg:col-span-8 space-y-8">
-          {/* Brain Dump Card */}
+          
+          {/* SECTION 1: AI Brain Dump Box */}
           <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-8 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-h3 text-on-surface flex items-center gap-2">
@@ -108,7 +140,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
               <button 
                 onClick={handleAIAction}
                 disabled={!brainDump || isExtracting}
-                className="bg-primary text-on-primary font-button px-6 py-2.5 rounded-lg flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50"
+                className="bg-primary text-on-primary font-button px-6 py-2.5 rounded-lg flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 shadow-sm"
               >
                 {isExtracting ? <span className="animate-spin"><Wand2 className="w-5 h-5" /></span> : <Sparkles className="w-5 h-5" />}
                 AI Generate
@@ -120,10 +152,11 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
             </div>
           </section>
 
-          {/* Structured Details Card */}
+          {/* SECTION 2: Structured Details (Populated by AI or user) */}
           <section className={`bg-surface-container-lowest border border-surface-container-highest rounded-xl p-8 shadow-sm transition-opacity ${details.title ? 'opacity-100' : 'opacity-50'}`}>
             <h3 className="font-h3 text-on-surface mb-8 border-b border-surface-container-highest pb-4">Scope Details</h3>
             <div className="space-y-6">
+              {/* Scope Title */}
               <div>
                 <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Scope Title</label>
                 <input 
@@ -134,6 +167,8 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                   type="text"
                 />
               </div>
+              
+              {/* Deliverables List */}
               <div>
                 <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Deliverables & Tasks (Bulleted)</label>
                 <textarea 
@@ -143,6 +178,8 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                   placeholder="- Task 1\n- Task 2"
                 />
               </div>
+              
+              {/* Pricing and Timeline Modifiers */}
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Price Adjustment</label>
@@ -175,10 +212,15 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
           </section>
         </div>
 
+        {/* Right Column: Settings & Final Actions */}
         <div className="lg:col-span-4 space-y-8">
+          
+          {/* SECTION 3: Context and Client Routing */}
           <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-8 shadow-sm">
             <h3 className="font-h3 text-on-surface mb-6">Context</h3>
             <div className="space-y-8">
+              
+              {/* Client Combobox Component */}
               <div>
                 <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Client Selection</label>
                 <div className="relative" ref={dropdownRef}>
@@ -196,6 +238,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                     <ChevronDown className={`w-5 h-5 text-secondary transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                   </div>
 
+                  {/* Dropdown Options Box */}
                   {isDropdownOpen && (
                     <div className="absolute top-full left-0 right-0 mt-2 bg-surface-container-lowest border border-surface-container-highest rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in duration-150 origin-top">
                       <div className="p-2 border-b border-surface-container-highest flex items-center gap-2 bg-surface-container-low">
@@ -211,6 +254,8 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                         />
                         {clientSearch && <X className="w-4 h-4 text-outline cursor-pointer hover:text-on-surface" onClick={() => setClientSearch('')} />}
                       </div>
+                      
+                      {/* Dropdown Options List */}
                       <div className="max-h-60 overflow-y-auto">
                         {filteredClients.length > 0 ? (
                           filteredClients.map((client) => (
@@ -233,6 +278,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                             </div>
                           ))
                         ) : clientSearch ? (
+                          // Zero State: Allow creating a new client if search fails
                           <div className="px-4 py-8 text-center bg-surface-container-low">
                             <p className="font-body-sm text-secondary mb-4 italic">
                               No client with name: <span className="font-semibold text-on-surface">"{clientSearch}"</span>
@@ -247,6 +293,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                             <p className="mt-4 text-[11px] text-outline px-4 tracking-tight">Do you want to create a new client record for this brand?</p>
                           </div>
                         ) : (
+                          // Zero state: Initial empty state without typing
                           <div className="px-4 py-8 text-center">
                             <p className="font-body-sm text-secondary">Start typing to search or add a client</p>
                           </div>
@@ -256,6 +303,8 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                   )}
                 </div>
               </div>
+              
+              {/* Tone Override Options */}
               <div>
                 <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Communication Tone</label>
                 <p className="font-body-sm text-secondary mb-3">Adjusts how the AI drafts the final explanation.</p>
@@ -282,9 +331,11 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
             </div>
           </section>
 
+          {/* SECTION 4: Submission State */}
           <section className="bg-surface-container-highest border border-surface-container-highest rounded-xl p-8 shadow-sm">
             <p className="font-body-sm text-secondary mb-6 text-center">Complete all required fields to generate the formal document.</p>
             <div className="space-y-4">
+              {/* Submit Button -> Fires callback to App.tsx to move to next Step */}
               <button 
                 onClick={() => onGenerate(details, tone)}
                 className="w-full bg-primary text-on-primary font-button px-4 py-2.5 rounded-lg shadow-sm hover:opacity-90 transition-colors flex justify-center items-center gap-2"
@@ -292,6 +343,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                 Generate & Preview
                 <ArrowRight className="w-5 h-5" />
               </button>
+              
               <div className="grid grid-cols-2 gap-4">
                 <button 
                   onClick={onCancel}

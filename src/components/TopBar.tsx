@@ -8,9 +8,24 @@ interface TopBarProps {
   onBack?: () => void;
 }
 
+/**
+ * COMPONENT: Top Navigation Bar
+ * 
+ * Responsibilities:
+ * 1. Global Action: Triggers the "New Scope" workflow.
+ * 2. Context Aware: Displays a back button and title when inside a workflow (like Preview).
+ * 3. Theme Manager: Controls application-wide Light/Dark mode state and persists it.
+ */
 export function TopBar({ onNewScope, isSidebarCollapsed, title, onBack }: TopBarProps) {
+  // --- Theme State Management ---
   const [isDark, setIsDark] = useState(false);
 
+  /**
+   * ON INITIALIZATION:
+   * 1. Read 'localStorage' to see if the user has a saved preference.
+   * 2. Fallback to OS-level media query if no preference is saved.
+   * 3. Apply the 'dark' CSS class to the HTML root element. Tailwind picks this up.
+   */
   useEffect(() => {
     // Check initial preference
     if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -22,6 +37,10 @@ export function TopBar({ onNewScope, isSidebarCollapsed, title, onBack }: TopBar
     }
   }, []);
 
+  /**
+   * ACTION: Toggle Theme
+   * Flips the state, updates the global DOM, and persists to localStorage.
+   */
   const toggleTheme = () => {
     if (isDark) {
       document.documentElement.classList.remove('dark');
@@ -36,11 +55,13 @@ export function TopBar({ onNewScope, isSidebarCollapsed, title, onBack }: TopBar
 
   return (
     <header 
+      // Layout shifts dynamically based on Sidebar width for a smooth animation
       className={`bg-surface-container-lowest/80 backdrop-blur-md border-b border-surface-container-highest flex justify-between items-center h-16 px-8 fixed top-0 right-0 z-10 shadow-sm transition-all duration-300 ease-in-out ${
         isSidebarCollapsed ? 'left-20' : 'left-64'
       }`}
     >
       <div className="flex items-center gap-4 flex-1">
+        {/* Render a context-aware back button if in a specific workflow step */}
         {onBack && (
           <button 
             onClick={onBack}
@@ -56,6 +77,7 @@ export function TopBar({ onNewScope, isSidebarCollapsed, title, onBack }: TopBar
       </div>
       
       <div className="flex items-center gap-4">
+        {/* Global Theme Toggle */}
         <button
           onClick={toggleTheme}
           className="p-2 rounded-full hover:bg-surface-container text-secondary hover:text-on-surface transition-colors"
@@ -63,6 +85,7 @@ export function TopBar({ onNewScope, isSidebarCollapsed, title, onBack }: TopBar
         >
           {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
         </button>
+        {/* Only show the New Scope button if we aren't already deep inside a workflow */}
         {!onBack && (
           <button 
             onClick={onNewScope}
