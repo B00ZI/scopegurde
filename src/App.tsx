@@ -9,6 +9,14 @@ import { CreateChangeOrderPage } from './pages/CreateChangeOrder';
 import { PreviewSendPage } from './pages/PreviewSend';
 import { ApprovalPage } from './pages/Approval';
 import { ApprovalPortalPage } from './pages/ApprovalPortal';
+import { AddClientPage } from './pages/AddClient';
+import { ClientDetailsPage } from './pages/ClientDetails';
+import { LoginPage } from './pages/Login';
+import { SignUpPage } from './pages/SignUp';
+import { ScopeDetailsPage } from './pages/ScopeDetails';
+import { CompletedScopesPage } from './pages/CompletedScopes';
+import { EditClientPage } from './pages/EditClient';
+import { Client } from './types';
 
 /**
  * ENTRY POINT & MAIN LAYOUT CONTROLLER
@@ -18,30 +26,30 @@ import { ApprovalPortalPage } from './pages/ApprovalPortal';
  * It uses simple state-based conditional rendering instead of a complex library like React Router,
  * keeping the prototype lightweight and easy to follow.
  * 
- * Data Flow:
- * - Sidebar triggers navigation state changes.
- * - TopBar triggers the "Create Scope" floating state.
- * - CreateChangeOrder generates scope details -> passes to PreviewSend -> passes to ApprovalPortal.
+ * Data Flow Direction:
+ * UI Events -> App State (Routing/Wizards) -> Component Props -> Rendered View
  */
 export default function App() {
-  // Navigation State: Controls the primary dashboard views (Dashboard, Clients, Settings, etc.)
+  // --- AUTHENTICATION STATE ---
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authView, setAuthView] = useState<'login' | 'signup'>('login');
+
+  // --- NAVIGATION & ROUTING STATE ---
   const [currentPage, setCurrentPage] = useState('dashboard');
-  
-  // Layout State: Manages the visual state of the sidebar to maximize workspace area
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // Workflow State: Handles the "Create New Scope" funnel.
-  // These states overlay the primary navigation, acting like modals or full-screen wizards.
+  // --- WORKFLOW: CREATE SCOPE WIZARD ---
+  // isCreatingOrder -> orderPreviewDetails -> isPreviewingPortal
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
-  
-  // Data State: Holds the structured scope output generated from the AI prompt or manual entry
   const [orderPreviewDetails, setOrderPreviewDetails] = useState<any>(null);
-  
-  // Data State: Holds the tone preference ('friendly', 'neutral', 'firm') for AI message generation
   const [previewTone, setPreviewTone] = useState('friendly');
-  
-  // Workflow State: Triggers the client-facing approval preview screen
   const [isPreviewingPortal, setIsPreviewingPortal] = useState(false);
+
+  // --- DRILL-DOWN / SUB-ROUTING STATES ---
+  const [isAddingClient, setIsAddingClient] = useState(false);
+  const [viewingClient, setViewingClient] = useState<Client | null>(null);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [viewingScope, setViewingScope] = useState<any>(null);
 
   /**
    * Router Logic:
@@ -90,12 +98,59 @@ export default function App() {
       />
     );
 
+    // Sub-views for Clients area
+    if (isAddingClient) {
+      return (
+        <AddClientPage 
+          onCancel={() => setIsAddingClient(false)}
+          onSave={() => setIsAddingClient(false)}
+        />
+      );
+    }
+
+    if (editingClient) {
+      return (
+        <EditClientPage 
+          client={editingClient}
+          onCancel={() => setEditingClient(null)}
+          onSave={() => setEditingClient(null)}
+          onDelete={() => setEditingClient(null)}
+        />
+      );
+    }
+
+    if (viewingClient) {
+      return (
+        <ClientDetailsPage 
+          client={viewingClient}
+          onBack={() => setViewingClient(null)}
+          onEdit={() => setEditingClient(viewingClient)}
+          onRemove={() => setViewingClient(null)} // Mock removal
+          onViewScope={(s) => {
+            setViewingClient(null); // Optional: if we want to drop the client context, or we can just set viewingScope
+            setViewingScope(s);
+          }}
+        />
+      );
+    }
+
+    if (viewingScope) {
+      return (
+        <ScopeDetailsPage 
+          scope={viewingScope}
+          onBack={() => setViewingScope(null)}
+          onViewScope={(s) => setViewingScope(s)}
+        />
+      );
+    }
+
     // 5. Default Navigation: Standard Admin Dashboard Views
     switch (currentPage) {
-      case 'dashboard': return <DashboardPage />;
-      case 'clients': return <ClientsPage />;
-      case 'notifications': return <NotificationsPage />;
-      case 'settings': return <SettingsPage />;
+      case 'dashboard': return <DashboardPage onViewScope={(s) => setViewingScope(s)} />;
+      case 'clients': return <ClientsPage onAddClient={() => setIsAddingClient(true)} onViewClient={(c) => setViewingClient(c)} onEditClient={(c) => setEditingClient(c)} onDeleteClient={() => {}} />;
+      case 'notifications': return <NotificationsPage onViewScope={(s) => setViewingScope(s)} />;
+      case 'history': return <CompletedScopesPage onViewScope={(s) => setViewingScope(s)} />;
+      case 'settings': return <SettingsPage onLogout={() => setIsAuthenticated(false)} />;
       default: return <DashboardPage />;
     }
   };
@@ -109,6 +164,24 @@ export default function App() {
     return <>{renderContent()}</>;
   }
 
+  // Authentication Guard
+  if (!isAuthenticated) {
+    if (authView === 'login') {
+      return (
+        <LoginPage 
+          onLoginSuccess={() => setIsAuthenticated(true)}
+          onNavigateToSignUp={() => setAuthView('signup')}
+        />
+      );
+    }
+    return (
+      <SignUpPage 
+        onSignUpSuccess={() => setIsAuthenticated(true)}
+        onNavigateToLogin={() => setAuthView('login')}
+      />
+    );
+  }
+
   // Standard Admin Layout Structure
   return (
     <div className="flex min-h-screen bg-background">
@@ -116,11 +189,16 @@ export default function App() {
         currentPage={currentPage} 
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        onLogout={() => setIsAuthenticated(false)}
         onPageChange={(page) => {
           // Navigating away clears any active wizards
           setCurrentPage(page);
           setIsCreatingOrder(false);
           setOrderPreviewDetails(null);
+          setIsAddingClient(false);
+          setViewingClient(null);
+          setEditingClient(null);
+          setViewingScope(null);
         }} 
       />
       <div className="flex-1 flex flex-col min-h-screen">
@@ -128,24 +206,30 @@ export default function App() {
           onNewScope={() => setIsCreatingOrder(true)} 
           isSidebarCollapsed={isSidebarCollapsed} 
           // Dynamically adjust TopBar title and back button based on active wizard state
-          title={orderPreviewDetails ? 'Preview & Send' : isCreatingOrder ? 'Create New Scope' : undefined}
-          onBack={orderPreviewDetails ? () => setOrderPreviewDetails(null) : isCreatingOrder ? () => setIsCreatingOrder(false) : undefined}
+          title={
+            orderPreviewDetails ? 'Preview & Send' : 
+            isCreatingOrder ? 'Create New Scope' : 
+            isAddingClient ? 'Add Client' :
+            editingClient ? 'Edit Client' :
+            viewingClient ? 'Client Summary' :
+            viewingScope ? `Scope #${viewingScope.id}` :
+            undefined
+          }
+          onBack={
+            orderPreviewDetails ? () => setOrderPreviewDetails(null) : 
+            isCreatingOrder ? () => setIsCreatingOrder(false) : 
+            isAddingClient ? () => setIsAddingClient(false) :
+            editingClient ? () => setEditingClient(null) :
+            viewingClient ? () => setViewingClient(null) :
+            viewingScope ? () => setViewingScope(null) :
+            undefined
+          }
         />
         {/* Main Workspace Area */}
         <main className={`flex-1 ${isSidebarCollapsed ? 'ml-20' : 'ml-64'} transition-all duration-300 ease-in-out px-8 pt-24 pb-8`}>
           {renderContent()}
         </main>
       </div>
-      
-      {/* Floating Demo Access: Quick link to view the hardcoded Approval Request demo */}
-      {currentPage === 'dashboard' && (
-        <button 
-          onClick={() => setCurrentPage('approval')}
-          className="fixed bottom-6 right-6 bg-slate-900 text-white dark:bg-primary dark:text-on-primary px-4 py-2 rounded-full shadow-lg font-button flex items-center gap-2 hover:opacity-90 transition-all z-50"
-        >
-          View Client Portal
-        </button>
-      )}
     </div>
   );
 }

@@ -1,4 +1,7 @@
-import { LayoutDashboard, Users, Bell, Settings, LogOut, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { LayoutDashboard, Users, Bell, Settings, LogOut, ChevronLeft, ChevronRight, Archive } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface SidebarProps {
   // Drives global app routing
@@ -7,6 +10,8 @@ interface SidebarProps {
   // Drives layout width updates across the app (Sidebar + TopBar width calculations)
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  // Auth control
+  onLogout?: () => void;
 }
 
 /**
@@ -15,17 +20,19 @@ interface SidebarProps {
  * Purpose: Provides primary navigation links. It holds local configuration for 
  * the nav items array mapping to the root router switch statement in App.tsx.
  */
-export function Sidebar({ currentPage, onPageChange, isCollapsed, onToggleCollapse }: SidebarProps) {
+export function Sidebar({ currentPage, onPageChange, isCollapsed, onToggleCollapse, onLogout }: SidebarProps) {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   // Primary navigation map. IDs directly match the case statements in `App.tsx -> renderContent`
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'clients', label: 'Clients', icon: Users },
+    { id: 'history', label: 'Completed Scopes', icon: Archive },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   return (
-    <nav className={`bg-surface-container-lowest border-r border-surface-container-highest h-screen flex flex-col fixed left-0 top-0 py-6 transition-all duration-300 ease-in-out z-20 ${isCollapsed ? 'w-20 px-3' : 'w-64 px-4'}`}>
+    <nav className={`bg-surface-container-lowest border-r border-surface-container-highest h-screen flex flex-col fixed left-0 top-0 py-6 transition-all duration-300 ease-in-out z-50 ${isCollapsed ? 'w-20 px-3' : 'w-64 px-4'}`}>
       
       {/* SECTION 1: Brand & Collapse Controls */}
       <div className={`mb-8 flex items-center justify-between ${isCollapsed ? 'px-2' : 'px-3'}`}>
@@ -44,7 +51,7 @@ export function Sidebar({ currentPage, onPageChange, isCollapsed, onToggleCollap
       </div>
 
       {/* SECTION 2: Navigation Links */}
-      <ul className="flex flex-col gap-1.5">
+      <ul className="flex flex-col gap-1.5 flex-1">
         {menuItems.map((item) => (
           <li key={item.id}>
             <button
@@ -65,43 +72,39 @@ export function Sidebar({ currentPage, onPageChange, isCollapsed, onToggleCollap
         ))}
       </ul>
 
-      {/* SECTION 3: Current User Context Footer */}
-      <div className="mt-auto pt-6 border-t border-surface-container-highest">
-        <div className={`flex items-center justify-between gap-2 mb-4 ${isCollapsed ? 'flex-col px-0' : 'px-3'}`}>
-          <div className={`flex items-center gap-3 overflow-hidden flex-nowrap ${isCollapsed ? 'flex-col' : ''}`}>
-            
-            {/* Dynamic Avatar using Picsum API for demo */}
-            <div className="w-8 h-8 rounded-full bg-primary-container overflow-hidden border border-surface-container-highest flex-shrink-0">
-              <img 
-                src="https://picsum.photos/seed/sarah/100/100" 
-                alt="Sarah Jenkins" 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-            {!isCollapsed && (
-              <div className="overflow-hidden">
-                <p className="font-sans text-[13px] font-semibold text-on-surface truncate whitespace-nowrap leading-none mb-1">Sarah Jenkins</p>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                  <p className="font-sans text-[10px] uppercase tracking-wider text-secondary font-bold whitespace-nowrap">Enterprise Plan</p>
-                </div>
-              </div>
-            )}
-          </div>
-          <button className={`p-1.5 rounded-lg hover:bg-error/5 text-outline hover:text-error transition-all flex-shrink-0 ${isCollapsed ? 'mt-2' : ''}`} title="Log Out">
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-        
-        <button 
-          className={`w-full flex items-center transition-all group ${isCollapsed ? 'justify-center py-3' : 'gap-3 px-3 py-2 rounded-lg hover:bg-surface-container/50'}`}
-          title={isCollapsed ? "Manage Subscription" : undefined}
+      {/* Theme and Logout buttons at the bottom */}
+      <div className="pt-4 border-t border-surface-container-highest mt-4 space-y-1">
+        <ThemeToggle 
+          variant="full" 
+          label={!isCollapsed ? "Appearance" : undefined}
+          className={isCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3 py-2.5'}
+        />
+
+        <button
+          onClick={() => setShowLogoutConfirm(true)}
+          className={`w-full flex items-center rounded-lg font-sans text-sm font-medium transition-all duration-200 ease-in-out group hover:bg-error/5 text-secondary hover:text-error ${
+            isCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3 py-2.5'
+          }`}
+          title={isCollapsed ? "Log Out" : undefined}
         >
-          <CreditCard className={`w-4 h-4 text-outline group-hover:text-primary transition-colors flex-shrink-0`} />
-          {!isCollapsed && <span className="font-sans text-xs font-medium whitespace-nowrap">Manage Subscription</span>}
+          <LogOut className="w-5 h-5 flex-shrink-0 text-outline group-hover:text-error" />
+          {!isCollapsed && <span className="whitespace-nowrap">Log Out</span>}
         </button>
       </div>
+
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        title="Confirm Log Out"
+        message="Are you sure you want to log out? You will need to sign in again to access ScopeGuard."
+        confirmText="Log Out"
+        cancelText="Cancel"
+        isDestructive={true}
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          onLogout?.();
+        }}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </nav>
   );
 }

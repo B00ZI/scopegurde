@@ -54,7 +54,7 @@ export async function generateClientMessage(details: any, tone: string) {
     model: "gemini-3.1-flash",
     contents: `Generate a polished client message for a scope adjustment with the following details: ${JSON.stringify(details)}. The tone should be ${tone}.`,
     config: {
-      systemInstruction: "You are a professional account manager at ScopeGuard. Write a clear, persuasive message explaining the surcharge. Always end the message by asking the client to review and approve the details at the following secure portal: https://scopeguard.app/approval-portal/SC-4821. Do not includes the URL in markdown brackets, just as a plain string.",
+      systemInstruction: "You are a professional account manager at ScopeGuard. Write a clear, persuasive message explaining the surcharge. If a 'validUntil' date is provided in the details, ensure it is prominently mentioned as a deadline. Always end the message by asking the client to review and approve the details at the following secure portal: https://scopeguard.app/approval-portal/SC-4821. Do not includes the URL in markdown brackets, just as a plain string.",
     }
   });
 

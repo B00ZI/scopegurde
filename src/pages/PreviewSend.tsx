@@ -1,45 +1,43 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Copy, Send, Loader2, Mail, MessageCircle, ChevronUp, Save, FileText } from 'lucide-react';
 import { generateClientMessage } from '../lib/gemini';
 
 interface PreviewSendProps {
-  // The structured payload generated in the previous step
   details: any;
   tone: string;
   onBack: () => void;
-  // Triggers the client-facing approval screen
   onPreviewPortal: () => void;
 }
 
 /**
- * PAGE COMPONENT: Message Preview & Send
+ * MESSAGE PREVIEW & SEND PAGE (STEP 2)
  * 
- * Purpose: This is the second step in the scope creation funnel.
- * It takes the structured `details` payload, sends it to the AI to write a 
- * polished client-facing message, and allows the admin to copy or "send" it.
+ * Purpose: This component acts as the "Staging" area before a scope change 
+ * is finalized and sent to a client.
+ * 
+ * High-Level Flow:
+ * 1. MAPPING: AI transforms the structured JSON project data into human-readable copy.
+ * 2. REVIEW: Admin edits or simply verifies the drafted message.
+ * 3. DELIVERY: Message is either copied to clipboard (WhatsApp/Slack) or 
+ *    simulated as sent via Email.
  */
 export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: PreviewSendProps) {
-  // --- Core State Variables ---
-  const [message, setMessage] = useState(''); // The generated AI string
-  const [isGenerating, setIsGenerating] = useState(true); // Loading state for LLM
-  
-  // UI States for secondary actions
+  // --- STATE MANAGEMENT ---
+  const [message, setMessage] = useState('');
+  const [isGenerating, setIsGenerating] = useState(true);
   const [isSendMenuOpen, setIsSendMenuOpen] = useState(false);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * INITIALIZATION:
-   * As soon as this component mounts, it triggers the Gemini API to format 
-   * the structured details into a human-readable message.
-   */
+  // --- INITIALIZATION: AI GENERATION ---
   useEffect(() => {
     async function load() {
       try {
         const msg = await generateClientMessage(details, tone);
         setMessage(msg);
       } catch (error) {
-        console.error('Failed to generate client message:', error);
+        console.error('AI Generation Error:', error);
+        setMessage('Error generating preview. Please try again.');
       } finally {
         setIsGenerating(false);
       }
@@ -47,40 +45,32 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
     load();
   }, [details, tone]);
 
-  /**
-   * UI UTILITY:
-   * Closes the "Send" delivery method dropdown if the user clicks loosely on the page.
-   */
+  // --- REUSABLE LOGIC: CLICK OUTSIDE ---
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsSendMenuOpen(false);
       }
-    }
+    };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  /**
-   * ACTION: Copy to Clipboard
-   * Provides immediate feedback to the user when they copy the AI drafted message.
-   */
+  // --- ACTION HANDLERS ---
   const handleCopy = () => {
     navigator.clipboard.writeText(message);
     setCopyStatus('Copied!');
-    setTimeout(() => setCopyStatus(null), 2000); // Reset visual status
+    setTimeout(() => setCopyStatus(null), 2000);
   };
 
   /**
-   * UI UTILITY: Link interceptor
-   * The AI generates a text block containing a hardcoded demo link. 
-   * We intercept this rendering using Regex, turning the plain string URL into 
-   * a clickable <a> element that hooks back into our React state (onPreviewPortal).
+   * INTERACTIVE LINK PARSER
+   * Scans text for URLs and makes them clickable, specifically mapping 
+   * portal links to our React state transition (onPreviewPortal).
    */
   const renderMessageWithLinks = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     return text.split(urlRegex).map((part, i) => {
-      // If the string chunk matches a URL structure, render an interactive anchor
       if (part.match(urlRegex)) {
         return (
           <a 
@@ -88,29 +78,25 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
             href={part} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="text-primary underline hover:text-primary-container transition-colors break-all"
+            className="text-primary font-bold underline hover:text-primary/80 transition-colors break-all"
             onClick={(e) => {
-              // Always override the default href behavior because this is a demo prototype
               e.preventDefault();
-              if (part.includes('approval-portal')) {
-                // Trigger the React App state router
-                onPreviewPortal();
-              }
+              if (part.includes('approval-portal')) onPreviewPortal();
             }}
           >
             {part}
           </a>
         );
       }
-      return part; // Render standard text
+      return part;
     });
   };
 
   return (
     <div className="flex flex-col">
-      <div className="flex-1 p-8 max-w-container-max mx-auto w-full flex flex-col gap-10">
+      <div className="flex-1 p-8 max-w-6xl mx-auto w-full flex flex-col gap-10">
         {/* SECTION 1: Generated Preview Box */}
-        <section className="flex flex-col gap-2 max-w-3xl mx-auto w-full">
+        <section className="flex flex-col gap-2 w-full">
           <div className="flex items-center justify-between">
             <h2 className="font-h2 text-on-surface">Final Message Preview</h2>
             <div className="flex items-center gap-3">
@@ -147,7 +133,7 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
         </section>
 
         {/* SECTION 2: Action Footer (Save, Send, Routing options) */}
-        <section className="mt-auto pt-10 pb-8 max-w-3xl mx-auto w-full flex flex-col sm:flex-row justify-end gap-4">
+        <section className="mt-auto pt-10 pb-8 w-full flex flex-col sm:flex-row justify-end gap-4">
           <button 
             className="px-8 py-3 bg-surface-container-low border border-surface-container-highest text-on-surface hover:bg-surface-container-high rounded-lg font-button transition-all flex items-center justify-center gap-2 w-full sm:w-auto shadow-sm active:scale-95"
           >

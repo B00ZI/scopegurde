@@ -1,49 +1,42 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Brain, Sparkles, Wand2, ArrowRight, ChevronDown, Plus, Search, Check, X } from 'lucide-react';
 import { extractScopeFromBrainDump } from '../lib/gemini';
 import { PageHeader } from '../components/PageHeader';
+import { MOCK_CLIENTS } from '../lib/mockData';
 
 interface CreateChangeOrderProps {
-  // Callback when user is ready to see the finalized output
   onGenerate: (details: any, tone: string) => void; 
-  // Callback to return to the dashboard
   onCancel: () => void;
 }
 
-// Mock client database - in a real app, this would be fetched from an API
-const INITIAL_CLIENTS = [
-  { id: 'acme', name: 'Acme Corp', industry: 'Retail' },
-  { id: 'globex', name: 'Globex Logistics', industry: 'Shipping' },
-  { id: 'initech', name: 'Initech', industry: 'Software' },
-  { id: 'stark', name: 'Stark Industries', industry: 'Defense' },
-  { id: 'wayne', name: 'Wayne Enterprises', industry: 'Technology' },
-];
-
 /**
- * PAGE COMPONENT: Create Scope Wizard
+ * CREATE SCOPE WIZARD (STEP 1)
  * 
- * Purpose: First step in the scope creation funnel. 
- * Allows users to either manually type out structured scope details OR dump 
- * raw meeting notes/emails into a textarea and have the Gemini AI automatically parse them.
+ * Purpose: The entry point for the scope creation funnel.
+ * Supports dual-mode input:
+ * 1. AI EXTRACTOR: Dump raw meeting notes or emails into a text area. 
+ *    Gemini parses specific deliverables, pricing, and timing.
+ * 2. MANUAL ENTRY: Traditional form-based entry for structured data.
  */
 export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrderProps) {
-  // --- Core State Variables ---
-  const [availableClients, setAvailableClients] = useState(INITIAL_CLIENTS);
-  const [brainDump, setBrainDump] = useState(''); // Raw, unstructured text input
-  const [isExtracting, setIsExtracting] = useState(false); // AI loading state
-  const [tone, setTone] = useState('friendly'); // AI generation tone preference
+  // --- STATE MANAGEMENT ---
+  const [availableClients, setAvailableClients] = useState(MOCK_CLIENTS);
+  const [brainDump, setBrainDump] = useState('');
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [tone, setTone] = useState('friendly');
   
-  // The final structured model that describes the scope. This handles both manual and AI-inferred inputs.
+  // The final structured model that describes the scope.
   const [details, setDetails] = useState({
     title: '',
     deliverables: '',
     priceAdjustment: '',
-    extraTimeDays: ''
+    extraTimeDays: '',
+    validUntil: ''
   });
 
-  // --- Combobox (Custom Dropdown) State ---
+  // --- COMBOBOX (CLIENT SELECTION) STATE ---
   const [clientSearch, setClientSearch] = useState('');
-  const [selectedClient, setSelectedClient] = useState<typeof INITIAL_CLIENTS[0] | null>(null);
+  const [selectedClient, setSelectedClient] = useState<any | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -52,15 +45,16 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
     client.name.toLowerCase().includes(clientSearch.toLowerCase())
   );
 
-  /**
-   * Creates a new client gracefully and selects it if it doesn't exist in the list.
-   * This removes friction when a user gets a scope change from a totally new contract.
-   */
+  // --- EVENT HANDLERS ---
+
   const handleCreateClient = (name: string) => {
     const newClient = {
       id: `new-${Date.now()}`,
       name: name,
-      industry: 'Newly Added'
+      email: '',
+      ongoingScopes: 0,
+      changeOrders: 0,
+      totalRevenue: 0,
     };
     setAvailableClients([newClient, ...availableClients]);
     setSelectedClient(newClient);
@@ -68,47 +62,41 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
     setClientSearch('');
   };
 
-  /**
-   * Global event listener to close the custom dropdown if the user clicks anywhere else
-   */
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
-    }
+    };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   /**
    * AI PROCESSING ROUTINE:
-   * Takes the raw 'brainDump' text and passes it to the Gemini API (`extractScopeFromBrainDump`).
-   * Expects a strongly typed JSON Object in return, which is then mapped into the `details` state.
+   * Takes the raw text from 'brainDump' and uses LLM to map it into structured data.
    */
   const handleAIAction = async () => {
     if (!brainDump) return;
     setIsExtracting(true);
     try {
-      // 1. Call Gemini LLM (Input -> Processing)
       const extracted = await extractScopeFromBrainDump(brainDump);
-      
-      // 2. Map response to state (Processing -> State)
       setDetails({
         title: extracted.title || '',
         deliverables: extracted.deliverables?.join('\n') || '',
         priceAdjustment: extracted.priceAdjustment?.toString() || '',
-        extraTimeDays: extracted.extraTimeDays?.toString() || ''
+        extraTimeDays: extracted.extraTimeDays?.toString() || '',
+        validUntil: details.validUntil // Preserve existing date if set
       });
     } catch (error) {
-      console.error('Failed to extract data via AI:', error);
+      console.error('AI Extraction failed:', error);
     } finally {
       setIsExtracting(false);
     }
   };
 
   return (
-    <div className="max-w-container-max mx-auto py-8">
+    <div className="max-w-6xl mx-auto pt-2 pb-8 animate-in fade-in duration-300">
       {/* Introduction text */}
       <div className="mb-8">
         <p className="font-sans text-sm font-medium text-secondary">Draft scope modifications using AI or manual entry.</p>
@@ -208,6 +196,19 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                   </div>
                 </div>
               </div>
+
+              {/* Offer Expiration */}
+              <div>
+                <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Offer Valid Until</label>
+                <input 
+                  type="date"
+                  value={details.validUntil}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setDetails({ ...details, validUntil: e.target.value })}
+                  className="w-full bg-surface border border-surface-container-highest rounded-lg px-6 py-3 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" 
+                />
+                <p className="font-body-sm text-secondary mt-2">Sets an expiration date to create urgency and trigger automatic follow-ups.</p>
+              </div>
             </div>
           </section>
         </div>
@@ -272,7 +273,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                                 <span className={`font-body-base ${selectedClient?.id === client.id ? 'text-primary font-semibold' : 'text-on-surface'}`}>
                                   {client.name}
                                 </span>
-                                <span className="text-[11px] text-secondary uppercase font-bold tracking-wider">{client.industry}</span>
+                                <span className="text-[11px] text-secondary lowercase font-bold tracking-wider">{client.email || 'No email set'}</span>
                               </div>
                               {selectedClient?.id === client.id && <Check className="w-4 h-4 text-primary" />}
                             </div>

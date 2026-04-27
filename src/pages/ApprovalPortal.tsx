@@ -1,31 +1,33 @@
+import React from 'react';
 import { Check, Clock, Lock, Building2 } from 'lucide-react';
 
 interface ApprovalPortalProps {
-  // Contains the title, deliverables, and cost metadata
   details: any;
-  // Final actions (simulated in this environment)
   onApprove: () => void;
   onDecline: () => void;
 }
 
 /**
- * PAGE COMPONENT: Client Approval Portal (PUBLIC FACING)
+ * CLIENT-FACING APPROVAL PORTAL
  * 
- * Purpose: This is the exact screen the end-client sees when they click the secure
- * link sent to them in the WhatsApp/Email generated in the previous step.
+ * Purpose: The public URL that ends-clients land on.
  * 
- * Design Note: This intentionally uses a completely different layout structure 
- * (no sidebar, centered, high-focus) compared to the Admin dashboard, reinforcing 
- * that the user is now in a public-facing flow.
+ * Design Distinction: 
+ * Intentionally bypasses the main app layout (sidebar/topbar) to provide a 
+ * "White-Labeled" experience. High focus on the contract details and 
+ * call-to-action buttons.
  */
 export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPortalProps) {
-  // Simulate the current date for the invoice header
+  // --- RENDER HELPERS ---
   const formattedDate = new Date().toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
   });
 
+  const deliverablesList = (details.deliverables || '')
+    .split('\n')
+    .filter((line: string) => line.trim().length > 0);
   return (
     <div className="min-h-screen bg-surface-container-low py-16 px-4 selection:bg-primary/20 font-sans">
       <div className="max-w-2xl mx-auto space-y-10">
@@ -49,14 +51,28 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
             <h2 className="text-[32px] font-extrabold text-on-surface leading-[1.15] tracking-tight">
               {details.title || 'Additional Revision Cycle'}
             </h2>
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium text-secondary">
-                Requested on <span className="text-on-surface/80">{formattedDate}</span>
-              </p>
-              <div className="w-1 h-1 rounded-full bg-surface-container-highest" />
-              <p className="text-sm font-medium text-secondary">
-                Project: <span className="text-primary font-bold">{details.projectName || 'Q4 Strategy Deck'}</span>
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-2">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-secondary">
+                  Requested on <span className="text-on-surface/80">{formattedDate}</span>
+                </p>
+                <div className="w-1 h-1 rounded-full bg-surface-container-highest" />
+                <p className="text-sm font-medium text-secondary">
+                  Project: <span className="text-primary font-bold">{details.projectName || 'Q4 Strategy Deck'}</span>
+                </p>
+              </div>
+              
+              {details.validUntil && (
+                <>
+                  <div className="hidden sm:block w-1 h-1 rounded-full bg-surface-container-highest" />
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 w-fit">
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                    <p className="text-xs font-bold text-amber-700">
+                      Offer valid until {new Date(details.validUntil).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -65,22 +81,18 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
             <div className="p-10 space-y-6">
               <h3 className="text-[11px] font-bold text-primary uppercase tracking-[0.2em]">What's Included</h3>
               <ul className="space-y-5">
-                {(details.deliverables || '').split('\n').map((line: string, i: number) => (
-                  line.trim() && (
+                {deliverablesList.length > 0 ? (
+                  deliverablesList.map((line: string, i: number) => (
                     <li key={i} className="flex items-start gap-4">
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-0.5 border border-primary/20">
                         <Check className="w-3.5 h-3.5 text-primary" strokeWidth={3} />
                       </div>
                       <span className="text-on-surface font-medium leading-relaxed">
-                        {/* Remove bullet markdown dashes if the user/AI included them */}
                         {line.replace(/^-\s*/, '')}
                       </span>
                     </li>
-                  )
-                ))}
-                
-                {/* Fallback state if no deliverables are provided (primarily for the hardcoded dashboard demo button) */}
-                {!details.deliverables && (
+                  ))
+                ) : (
                   <>
                     <li className="flex items-start gap-4">
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-0.5 border border-primary/20">

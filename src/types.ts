@@ -9,7 +9,7 @@ export interface Client {
   id: string;
   name: string;
   email: string;
-  activeProjects: number;
+  ongoingScopes: number;
   changeOrders: number;
   totalRevenue: number;
   avatar?: string;
@@ -23,7 +23,7 @@ export interface ChangeOrder {
   deliverables: string[];
   priceAdjustment: number;
   extraTimeDays: number;
-  status: 'draft' | 'pending' | 'approved' | 'declined';
+  status: 'Draft' | 'Sent' | 'Approved' | 'Paid' | 'Expired' | 'Completed';
   dateIssued: string;
   requestedBy: {
     name: string;

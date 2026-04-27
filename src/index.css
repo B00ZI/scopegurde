@@ -111,3 +111,13 @@
 .font-body-sm { @apply text-xs sm:text-sm font-normal leading-relaxed; }
 .font-label-caps { @apply text-[11px] sm:text-xs font-bold leading-tight uppercase tracking-wider; }
 .font-button { @apply text-sm font-semibold leading-none; }
+
+/* Hide number spin buttons */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}

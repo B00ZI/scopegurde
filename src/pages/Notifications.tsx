@@ -1,48 +1,48 @@
-import { AlertTriangle, CheckCircle, Banknote, CheckCheck, Activity, RefreshCw } from 'lucide-react';
-import { Notification } from '../types';
+import React from 'react';
+import { AlertTriangle, CheckCircle, Banknote, CheckCheck, Zap, UserCircle, Eye, Clock, CreditCard, CheckCircle2 } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
+import { MOCK_NOTIFICATIONS } from '../lib/mockData';
 
-// Mock data to demonstrate different notification severities and states
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    type: 'warning',
-    title: 'New scope creep detected in Nexus Design project',
-    message: 'Automated analysis flagged a 15% deviation from the original contract parameters concerning freight dimensions. Immediate review required to mitigate surcharge absorption.',
-    time: '10 min ago',
-    unread: true,
-    actionLabel: 'Review Deviation'
-  },
-  {
-    id: '2',
-    type: 'success',
-    title: 'Client Axiom Logistics approved Scope #88492',
-    message: 'Digital signature verified. The updated surcharge schedule for Q3 routing has been fully executed and is now active in the billing system.',
-    time: '2 hours ago',
-    unread: true,
-    actionLabel: 'View Document'
-  },
-  {
-    id: '3',
-    type: 'info',
-    title: 'Surcharge reconciliation payment received',
-    message: 'Wire transfer of $14,250.00 from Meridian Shipping has cleared. This resolves the outstanding dispute for Route B surcharges.',
-    time: 'Yesterday, 4:30 PM',
-    unread: false,
-    actionLabel: 'View Ledger'
-  }
-];
+interface NotificationsPageProps {
+  onViewScope?: (scope: any) => void;
+}
 
 /**
- * PAGE COMPONENT: Notifications / Inbox
+ * INBOX / NOTIFICATIONS PAGE
  * 
- * Purpose: A timeline view of system events, alerts, and client actions.
- * Features a split layout with the primary notification feed on the left and 
- * system status widgets on the right.
+ * Purpose: A chronological feed of all business-critical events:
+ * - Status Changes (Manual or Automatic)
+ * - Client Activity (Viewed, Approved)
+ * - Proactive Urgency Alerts (Expiring Scopes)
+ * 
+ * Flow:
+ * - System emits events -> Appended to notification list
+ * - User acts on them -> Redirected to relevant Scope or Client page
  */
-export function NotificationsPage() {
+export function NotificationsPage({ onViewScope }: NotificationsPageProps) {
+  // --- BUSINESS LOGIC: NAVIGATION MAPPING ---
+  // Transforms notification contextual data into a Scope object for viewing
+  const handleNotificationClick = (notification: any) => {
+    if (onViewScope && notification.category !== 'System Alerts') {
+      let derivedStatus: 'Draft' | 'Sent' | 'Approved' | 'Paid' | 'Expired' | 'Completed' = 'Sent';
+      
+      if (notification.title.includes('Paid')) derivedStatus = 'Paid';
+      else if (notification.title.includes('Approved')) derivedStatus = 'Approved';
+      else if (notification.category === 'Deadline Approaching') derivedStatus = 'Expired';
+      
+      onViewScope({
+        id: notification.title.match(/#(\d+)/)?.[1] || '1044',
+        description: notification.title.split('#')[0] || notification.title,
+        amount: '$1,200.00',
+        time: notification.time,
+        status: derivedStatus,
+        client: 'Meridian Shipping'
+      });
+    }
+  };
+
   return (
-    <div className="max-w-container-max mx-auto py-8">
+    <div className="max-w-container-max mx-auto pt-2 pb-8">
       {/* Header Injection */}
       <PageHeader 
         title="Inbox" 
@@ -56,17 +56,20 @@ export function NotificationsPage() {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div className="max-w-4xl mx-auto grid grid-cols-1 gap-6">
         
-        {/* LEFT COLUMN: Main Notification Feed */}
-        <div className="md:col-span-8 flex flex-col gap-6">
-          <h3 className="font-label-caps text-secondary uppercase mb-2 tracking-wider">Today</h3>
+        {/* FEED SECTION */}
+        <div className="flex flex-col gap-6">
+          <h3 className="font-label-caps text-secondary uppercase mb-2 tracking-wider">Recent Alerts</h3>
           
-          {/* Dynamic mapping of 'Today' items */}
-          {MOCK_NOTIFICATIONS.filter(n => n.id !== '3').map(notification => (
+          {/* NOTIFICATION ITEM MAPPING */}
+          {MOCK_NOTIFICATIONS.map(notification => {
+            const Icon = notification.icon;
+            return (
             <div 
               key={notification.id}
-              className={`bg-surface-container-lowest border rounded-xl p-6 flex items-start gap-6 hover:bg-surface-container-low transition-all duration-200 cursor-pointer relative overflow-hidden group ${
+              onClick={() => handleNotificationClick(notification)}
+              className={`bg-surface-container-lowest border rounded-xl p-6 flex flex-col sm:flex-row items-start gap-4 sm:gap-6 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer relative overflow-hidden group shadow-sm ${
                 notification.type === 'warning' ? 'border-error/30 bg-error-container/5' : 'border-surface-container-highest'
               }`}
             >
@@ -77,23 +80,29 @@ export function NotificationsPage() {
                 notification.type === 'warning' ? 'bg-error-container text-on-error-container' : 
                 notification.type === 'success' ? 'bg-primary-container text-on-primary-container' : 'bg-secondary-container text-on-secondary-container'
               }`}>
-                {notification.type === 'warning' ? <AlertTriangle className="w-6 h-6" /> : 
-                 notification.type === 'success' ? <CheckCircle className="w-6 h-6" /> : <Banknote className="w-6 h-6" />}
+                <Icon className="w-6 h-6" />
               </div>
               
-              <div className="flex-1">
-                <div className="flex justify-between items-start mb-1">
-                  <h4 className="font-h3 text-on-surface">{notification.title}</h4>
-                  <span className={`font-body-sm font-medium ${notification.type === 'warning' ? 'text-error' : 'text-secondary'}`}>
+              <div className="flex-1 w-full">
+                <div className="flex flex-col sm:flex-row justify-between items-start mb-1 gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-secondary bg-surface-container px-2 py-0.5 rounded-full">{notification.category}</span>
+                    <span className={`font-body-sm font-medium sm:hidden ${notification.type === 'warning' ? 'text-error' : 'text-secondary'}`}>
+                      {notification.time}
+                    </span>
+                  </div>
+                  <span className={`hidden sm:block font-body-sm font-medium ${notification.type === 'warning' ? 'text-error' : 'text-secondary'}`}>
                     {notification.time}
                   </span>
                 </div>
+                <h4 className="font-h3 text-on-surface mb-2">{notification.title}</h4>
                 <p className="font-body-base text-on-surface-variant mb-4 leading-relaxed">
                   {notification.message}
                 </p>
                 <div className="flex gap-4">
-                  <button className={`font-button px-4 py-2 rounded-lg transition-colors ${
+                  <button className={`font-button px-4 py-2 rounded-lg transition-colors shadow-sm ${
                     notification.type === 'warning' ? 'bg-error text-on-primary hover:bg-on-error-container' : 
+                    notification.type === 'success' ? 'bg-primary text-on-primary hover:bg-primary/90' :
                     'text-primary border border-primary hover:bg-primary hover:text-on-primary'
                   }`}>
                     {notification.actionLabel}
@@ -104,62 +113,7 @@ export function NotificationsPage() {
                 </div>
               </div>
             </div>
-          ))}
-
-          {/* Hardcoded 'Yesterday' item to demonstrate state dimming */}
-          <h3 className="font-label-caps text-secondary uppercase mt-6 mb-2 tracking-wider">Yesterday</h3>
-          <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-6 flex items-start gap-6 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer opacity-80 hover:opacity-100">
-            <div className="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
-              <Banknote className="w-6 h-6" />
-            </div>
-            <div className="flex-1">
-              <div className="flex justify-between items-start mb-1">
-                <h4 className="font-h3 text-on-surface">Surcharge reconciliation payment received</h4>
-                <span className="font-body-sm text-secondary">Yesterday, 4:30 PM</span>
-              </div>
-              <p className="font-body-base text-on-surface-variant mb-4 leading-relaxed">
-                Wire transfer of $14,250.00 from Meridian Shipping has cleared. This resolves the outstanding dispute for Route B surcharges.
-              </p>
-              <div className="flex gap-4">
-                <button className="font-button text-secondary border border-surface-container-highest px-4 py-2 rounded-lg hover:bg-surface-container-highest transition-colors">
-                  View Ledger
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: Supplementary Dashboard Widgets */}
-        <div className="md:col-span-4 flex flex-col gap-6">
-          
-          {/* Health Status Widget */}
-          <div className="bg-surface-container-low border border-surface-container-highest rounded-xl p-6">
-            <h3 className="font-h3 text-on-surface mb-6">System Health</h3>
-            
-            <div className="flex flex-col gap-4">
-              {/* Active Sync State */}
-              <div className="flex items-center justify-between">
-                <span className="font-body-base text-on-surface-variant">API Sync</span>
-                <span className="font-body-sm text-primary flex items-center gap-1">
-                  <CheckCircle className="w-4 h-4" /> Operational
-                </span>
-              </div>
-              <div className="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
-                <div className="bg-primary w-full h-full"></div>
-              </div>
-              
-              {/* Loading/Pending State */}
-              <div className="flex items-center justify-between mt-2">
-                <span className="font-body-base text-on-surface-variant">Carrier Data Feeds</span>
-                <span className="font-body-sm text-secondary flex items-center gap-1">
-                  <RefreshCw className="w-4 h-4 animate-spin" /> Syncing...
-                </span>
-              </div>
-              <div className="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
-                <div className="bg-secondary w-3/4 h-full"></div>
-              </div>
-            </div>
-          </div>
+          )})}
         </div>
       </div>
     </div>
