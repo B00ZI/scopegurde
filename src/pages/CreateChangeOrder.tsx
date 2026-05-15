@@ -23,6 +23,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
   const [availableClients, setAvailableClients] = useState(MOCK_CLIENTS);
   const [brainDump, setBrainDump] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
+  const [extractionError, setExtractionError] = useState<string | null>(null);
   const [tone, setTone] = useState('friendly');
   
   // The final structured model that describes the scope.
@@ -79,6 +80,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
   const handleAIAction = async () => {
     if (!brainDump) return;
     setIsExtracting(true);
+    setExtractionError(null);
     try {
       const extracted = await extractScopeFromBrainDump(brainDump);
       setDetails({
@@ -90,13 +92,14 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
       });
     } catch (error) {
       console.error('AI Extraction failed:', error);
+      setExtractionError('AI Extraction failed. Please try again or fill the form manually.');
     } finally {
       setIsExtracting(false);
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto pt-2 pb-8 animate-in fade-in duration-300">
+    <div className="max-w-5xl mx-auto pt-2 pb-8 animate-in fade-in duration-300">
       {/* Introduction text */}
       <div className="mb-8">
         <p className="font-sans text-sm font-medium text-secondary">Draft scope modifications using AI or manual entry.</p>
@@ -107,13 +110,13 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
         <div className="lg:col-span-8 space-y-8">
           
           {/* SECTION 1: AI Brain Dump Box */}
-          <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-8 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
+          <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-8 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
               <h3 className="font-h3 text-on-surface flex items-center gap-2">
                 <Brain className="text-primary w-6 h-6" />
                 Brain Dump
               </h3>
-              <span className="bg-primary-container text-on-primary-container font-label-caps px-2 py-1 rounded">AI Assisted</span>
+              <span className="bg-primary-container text-on-primary-container font-label-caps px-2 py-1 rounded self-start sm:self-auto">AI Assisted</span>
             </div>
             <p className="font-body-sm text-secondary mb-6">
               Paste client emails, call notes, or raw thoughts. Our AI will extract the scope, pricing, and timeline adjustments.
@@ -121,27 +124,32 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
             <textarea 
               value={brainDump}
               onChange={(e) => setBrainDump(e.target.value)}
-              className="w-full h-40 bg-surface border border-surface-container-highest rounded-lg p-6 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none mb-6" 
-              placeholder="e.g., The client wants to add a user dashboard with 3 widget types. This wasn't in the original scope. It will take an extra 4 days and we should bill $1,500 for it. They also want it rushed."
+              className="w-full h-40 bg-surface border border-surface-container-highest rounded-lg p-4 sm:p-6 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none mb-4" 
+              placeholder="e.g., The client wants to add a user dashboard with 3 widget types..."
             />
-            <div className="flex items-center gap-4 border-t border-surface-container-highest pt-6">
+            {extractionError && (
+              <div className="mb-6 p-4 bg-error-container text-on-error-container border border-error/20 rounded-lg text-sm font-medium animate-in fade-in slide-in-from-top-2">
+                {extractionError}
+              </div>
+            )}
+            <div className="flex flex-wrap items-center gap-4 border-t border-surface-container-highest pt-6">
               <button 
                 onClick={handleAIAction}
                 disabled={!brainDump || isExtracting}
-                className="bg-primary text-on-primary font-button px-6 py-2.5 rounded-lg flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 shadow-sm"
+                className="w-full sm:w-auto bg-primary text-on-primary font-button px-6 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 shadow-sm"
               >
                 {isExtracting ? <span className="animate-spin"><Wand2 className="w-5 h-5" /></span> : <Sparkles className="w-5 h-5" />}
                 AI Generate
               </button>
-              <span className="font-body-sm text-secondary">or</span>
-              <button className="text-primary font-button px-4 py-2.5 rounded-lg border border-primary hover:bg-primary/5 transition-colors">
+              <span className="hidden sm:inline font-body-sm text-secondary">or</span>
+              <button className="w-full sm:w-auto text-primary font-button px-4 py-2.5 rounded-lg border border-primary hover:bg-primary/5 transition-colors">
                 Fill Manually
               </button>
             </div>
           </section>
 
           {/* SECTION 2: Structured Details (Populated by AI or user) */}
-          <section className={`bg-surface-container-lowest border border-surface-container-highest rounded-xl p-8 shadow-sm transition-opacity ${details.title ? 'opacity-100' : 'opacity-50'}`}>
+          <section className={`bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-8 shadow-sm transition-opacity ${details.title ? 'opacity-100' : 'opacity-50'}`}>
             <h3 className="font-h3 text-on-surface mb-8 border-b border-surface-container-highest pb-4">Scope Details</h3>
             <div className="space-y-6">
               {/* Scope Title */}
@@ -150,7 +158,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                 <input 
                   value={details.title}
                   onChange={(e) => setDetails({ ...details, title: e.target.value })}
-                  className="w-full bg-surface border border-surface-container-highest rounded-lg px-6 py-3 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" 
+                  className="w-full bg-surface border border-surface-container-highest rounded-lg px-4 sm:px-6 py-3 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" 
                   placeholder="e.g., Additional User Dashboard Features" 
                   type="text"
                 />
@@ -162,13 +170,13 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                 <textarea 
                   value={details.deliverables}
                   onChange={(e) => setDetails({ ...details, deliverables: e.target.value })}
-                  className="w-full h-32 bg-surface border border-surface-container-highest rounded-lg p-6 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none" 
+                  className="w-full h-32 bg-surface border border-surface-container-highest rounded-lg p-4 sm:p-6 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none" 
                   placeholder="- Task 1\n- Task 2"
                 />
               </div>
               
               {/* Pricing and Timeline Modifiers */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Price Adjustment</label>
                   <div className="relative">
@@ -217,7 +225,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
         <div className="lg:col-span-4 space-y-8">
           
           {/* SECTION 3: Context and Client Routing */}
-          <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-8 shadow-sm">
+          <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-8 shadow-sm">
             <h3 className="font-h3 text-on-surface mb-6">Context</h3>
             <div className="space-y-8">
               
@@ -333,13 +341,13 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
           </section>
 
           {/* SECTION 4: Submission State */}
-          <section className="bg-surface-container-highest border border-surface-container-highest rounded-xl p-8 shadow-sm">
+          <section className="bg-surface-container-highest border border-surface-container-highest rounded-xl p-5 sm:p-8 shadow-sm">
             <p className="font-body-sm text-secondary mb-6 text-center">Complete all required fields to generate the formal document.</p>
             <div className="space-y-4">
               {/* Submit Button -> Fires callback to App.tsx to move to next Step */}
               <button 
                 onClick={() => onGenerate(details, tone)}
-                className="w-full bg-primary text-on-primary font-button px-4 py-2.5 rounded-lg shadow-sm hover:opacity-90 transition-colors flex justify-center items-center gap-2"
+                className="w-full bg-primary text-on-primary font-button px-4 py-3 rounded-lg shadow-sm hover:opacity-90 transition-colors flex justify-center items-center gap-2 active:scale-[0.98]"
               >
                 Generate & Preview
                 <ArrowRight className="w-5 h-5" />

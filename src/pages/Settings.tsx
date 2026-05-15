@@ -12,12 +12,10 @@ import {
   Lock,
   ChevronRight,
   Mail,
-  ShieldCheck,
-  ShieldAlert,
-  CreditCard as BillingIcon,
   Globe,
   Award,
-  LogOut as LogOutIcon
+  LogOut as LogOutIcon,
+  ShieldAlert
 } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 import { SearchableDropdown } from '../components/SearchableDropdown';
@@ -28,17 +26,10 @@ type SettingsTab = 'profile' | 'security' | 'business' | 'payments' | 'preferenc
 /**
  * SETTINGS PAGE
  * 
- * Purpose: Central control for user profile, organizational data, 
- * billing preferences, and payment integrations.
- * 
- * Sections:
- * - Profile: Personal details and current plan status.
- * - Security: Password management and account deletion.
- * - Business: Branding details used on public-facing portals.
- * - Payments: Stripe integration and default currencies.
+ * Purpose: Central control for user profile and organization data.
+ * Rebuilt with a MOBILE-FIRST architecture and strict overflow prevention.
  */
 export function SettingsPage({ onLogout }: { onLogout?: () => void }) {
-  // --- STATE MANAGEMENT ---
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [stripeConnected, setStripeConnected] = useState(false);
@@ -47,7 +38,6 @@ export function SettingsPage({ onLogout }: { onLogout?: () => void }) {
     alerts: true,
   });
 
-  // --- CONFIG: NAVIGATION ITEMS ---
   const sidebarItems = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'security', label: 'Security', icon: Lock },
@@ -57,16 +47,16 @@ export function SettingsPage({ onLogout }: { onLogout?: () => void }) {
   ];
 
   return (
-    <div className="max-w-container-max mx-auto pt-2 pb-8">
+    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 overflow-x-hidden">
       <PageHeader 
         title="Settings" 
-        subtitle="Manage your organization's identity and operational details."
+        subtitle="Manage your identity and business operations."
       />
       
-      <div className="flex flex-col lg:flex-row gap-8 mt-4">
-        {/* Sidebar Navigation */}
-        <aside className="w-full lg:w-64 shrink-0 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
-          <nav className="flex lg:flex-col gap-1.5 p-1 bg-surface-container-low rounded-2xl lg:bg-transparent lg:p-0 min-w-max lg:min-w-0">
+      <div className="flex flex-col lg:flex-row gap-8 mt-4 sm:mt-6">
+        {/* Navigation - Icon only on mobile, Side-nav on tablet/desktop */}
+        <aside className="w-full lg:w-56 shrink-0">
+          <nav className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide sticky top-0 bg-background/80 backdrop-blur-md z-10 lg:static lg:bg-transparent lg:backdrop-blur-none py-2 lg:py-0 w-full justify-between sm:justify-start">
             {sidebarItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -74,14 +64,15 @@ export function SettingsPage({ onLogout }: { onLogout?: () => void }) {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id as SettingsTab)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl font-button transition-all text-sm lg:text-base ${
+                  className={`flex items-center justify-center lg:justify-start gap-3 p-3 sm:px-4 sm:py-3 rounded-2xl lg:rounded-xl font-bold transition-all shrink-0 lg:shrink lg:w-full border-2 flex-1 lg:flex-none ${
                     isActive 
-                      ? 'bg-primary text-on-primary shadow-md' 
-                      : 'text-secondary hover:bg-surface-container hover:text-on-surface'
+                      ? 'bg-primary/10 text-primary border-primary/20 lg:bg-primary lg:text-on-primary lg:shadow-sm' 
+                      : 'bg-surface-container-low text-secondary border-transparent hover:bg-surface-container'
                   }`}
+                  title={item.label}
                 >
-                  <Icon className="w-5 h-5 shrink-0" />
-                  <span>{item.label}</span>
+                  <Icon className={`w-5 h-5 lg:w-4 lg:h-4 shrink-0 transition-transform ${isActive ? 'scale-110' : ''}`} />
+                  <span className="hidden sm:block text-[11px] lg:text-sm whitespace-nowrap">{item.label}</span>
                 </button>
               );
             })}
@@ -89,372 +80,242 @@ export function SettingsPage({ onLogout }: { onLogout?: () => void }) {
         </aside>
 
         {/* Content Area */}
-        <main className="flex-1 min-w-0">
-          <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-6 lg:p-8 shadow-sm">
+        <div className="flex-1 min-w-0">
+          <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-6 sm:p-8 shadow-sm">
             
-            {/* Profile Section */}
+            {/* PROFILE SECTION */}
             {activeTab === 'profile' && (
               <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div>
-                  <h3 className="font-h2 text-on-surface mb-1">Profile Info</h3>
-                  <p className="font-body-sm text-secondary">Manage your personal identification details.</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex flex-col gap-2">
-                    <label className="font-label-caps text-on-surface-variant uppercase tracking-wider">Full Name</label>
-                    <input 
-                      type="text" 
-                      defaultValue="Jane Doe"
-                      className="bg-surface-container border border-surface-container-highest rounded-lg px-4 py-2.5 font-body-base text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
+                <section>
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-on-surface">Personal Info</h3>
+                    <p className="text-xs text-secondary mt-1">Manage your public identity within the organization.</p>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="font-label-caps text-on-surface-variant uppercase tracking-wider">Email Address</label>
-                    <input 
-                      type="email" 
-                      defaultValue="jane.doe@example.com"
-                      className="bg-surface-container border border-surface-container-highest rounded-lg px-4 py-2.5 font-body-base text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-10 border-t border-surface-container-highest">
-                  <h3 className="font-h2 text-on-surface mb-1">Current Plan</h3>
-                  <p className="font-body-sm text-secondary mb-6">You are currently on the Pro plan with additional features.</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="p-6 bg-primary/5 border border-primary/20 rounded-2xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <Award className="w-20 h-20 text-primary" />
-                      </div>
-                      <div className="relative z-10">
-                        <div className="inline-flex px-2 py-0.5 rounded-full bg-primary text-on-primary text-[10px] font-bold uppercase tracking-wider mb-3">
-                          Pro Plan
-                        </div>
-                        <h4 className="text-2xl font-h2 text-on-surface font-bold mb-1">$15 / month</h4>
-                        <p className="text-xs text-secondary mb-6">Next billing date: May 12, 2026</p>
-                        <button className="px-4 py-2 bg-surface-container-low border border-surface-container-highest rounded-lg font-button text-sm text-on-surface hover:bg-surface-container-high transition-colors">
-                          Manage Billing
-                        </button>
-                      </div>
+                  <div className="space-y-5 max-w-lg">
+                    <div className="space-y-2.5">
+                      <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Full Name</label>
+                      <input 
+                        type="text" 
+                        defaultValue="Jane Doe"
+                        className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      />
                     </div>
-
-                    <div className="p-6 bg-surface-container-low border border-surface-container-highest rounded-2xl flex flex-col justify-center">
-                      <h4 className="font-button text-on-surface mb-2">Agency Suite</h4>
-                      <p className="text-[11px] text-secondary leading-relaxed mb-6 italic">
-                        Need more? Agency plans offer multi-user access and advanced reports.
-                      </p>
-                      <button className="flex items-center justify-center gap-2 px-4 py-2 bg-surface-container-highest text-on-surface rounded-lg font-button text-xs hover:opacity-80 transition-opacity">
-                        Upgrade
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
+                    <div className="space-y-2.5">
+                      <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Email Address</label>
+                      <input 
+                        type="email" 
+                        defaultValue="jane.doe@example.com"
+                        className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      />
                     </div>
                   </div>
-                </div>
+                </section>
 
-                <div className="pt-10 border-t border-surface-container-highest flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                  <div>
-                    <h3 className="font-h2 text-on-surface mb-1">Session</h3>
-                    <p className="font-body-sm text-secondary">Manage your current login session.</p>
+                <section className="pt-8 border-t border-surface-container-highest">
+                  <h3 className="text-lg font-bold text-on-surface mb-4">Subscription</h3>
+                  <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex flex-col sm:flex-row items-center gap-4 justify-between">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <Award className="w-10 h-10 text-primary shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-on-surface truncate">Pro Plan</p>
+                        <p className="text-[11px] text-secondary truncate">May 12, 2026 Billing</p>
+                      </div>
+                    </div>
+                    <button className="w-full sm:w-auto text-[11px] font-bold text-primary hover:underline transition-all">MANAGE BILLING</button>
                   </div>
-                  <button 
+                </section>
+
+                <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-surface-container-highest">
+                   <button 
                     onClick={() => setShowLogoutConfirm(true)}
-                    className="flex items-center justify-center gap-3 px-6 py-3 bg-error/10 text-error border border-error/20 rounded-xl font-button hover:bg-error/20 transition-all shadow-sm"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-error/10 text-error rounded-xl font-bold text-xs hover:bg-error/20 active:scale-95 transition-all border border-transparent shadow-sm"
                   >
-                    <LogOutIcon className="w-5 h-5" />
-                    Log Out of Account
+                    <LogOutIcon className="w-4 h-4" />
+                    Sign Out of Account
                   </button>
                 </div>
               </div>
             )}
 
-            {/* Security Section */}
+            {/* SECURITY SECTION */}
             {activeTab === 'security' && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div>
-                  <h3 className="font-h2 text-on-surface mb-1">Security & Access</h3>
-                  <p className="font-body-sm text-secondary">Keep your account guarded with a strong password.</p>
-                </div>
-
-                <div className="max-w-2xl bg-surface-container-low border border-surface-container-highest rounded-2xl p-6 lg:p-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                    <div className="flex flex-col gap-2 md:col-span-2">
-                      <label className="font-label-caps text-on-surface-variant uppercase tracking-wider text-[11px]">Current Password</label>
-                      <input 
-                        type="password" 
-                        placeholder="••••••••"
-                        className="bg-surface-container-lowest border border-surface-container-highest rounded-lg px-4 py-2.5 font-body-base text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                      />
+              <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <section>
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-on-surface">Security</h3>
+                    <p className="text-xs text-secondary mt-1">Protect your account with high-entropy credentials.</p>
+                  </div>
+                  <div className="space-y-5 max-w-lg">
+                    <div className="space-y-2.5">
+                      <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Current Password</label>
+                      <input type="password" placeholder="••••••••" className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-outline" />
                     </div>
-
-                    <div className="flex flex-col gap-2">
-                      <label className="font-label-caps text-on-surface-variant uppercase tracking-wider text-[11px]">New Password</label>
-                      <input 
-                        type="password" 
-                        placeholder="Min. 12 characters"
-                        className="bg-surface-container-lowest border border-surface-container-highest rounded-lg px-4 py-2.5 font-body-base text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2.5">
+                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">New Password</label>
+                        <input type="password" placeholder="Min 12 chars" className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-outline" />
+                      </div>
+                      <div className="space-y-2.5">
+                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Confirm New</label>
+                        <input type="password" placeholder="Repeat" className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-outline" />
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="font-label-caps text-on-surface-variant uppercase tracking-wider text-[11px]">Confirm Password</label>
-                      <input 
-                        type="password" 
-                        placeholder="••••••••"
-                        className="bg-surface-container-lowest border border-surface-container-highest rounded-lg px-4 py-2.5 font-body-base text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                      />
+                    <div className="pt-2">
+                      <button className="w-full sm:w-auto px-8 py-3 bg-primary text-on-primary rounded-xl font-bold text-xs shadow-lg shadow-primary/10 hover:translate-y-[-1px] active:translate-y-0 transition-all">
+                        Update Password
+                      </button>
                     </div>
                   </div>
-                  <div className="mt-8 flex justify-end">
-                    <button className="px-6 py-2.5 bg-primary text-on-primary rounded-xl font-button hover:opacity-90 transition-all shadow-md">
-                      Update Password
-                    </button>
-                  </div>
-                </div>
+                </section>
 
                 <div className="pt-8 border-t border-surface-container-highest">
-                  <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                    <div>
-                      <h4 className="font-button text-red-600 dark:text-red-400 mb-1 flex items-center gap-2">
-                        <ShieldAlert className="w-5 h-5" />
-                        Danger Zone
-                      </h4>
-                      <p className="font-body-sm text-secondary">Permanently delete your account and all associated data. This action is irreversible.</p>
+                  <div className="p-6 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-2xl space-y-4">
+                    <div className="flex items-center gap-3 text-red-600">
+                      <ShieldAlert className="w-5 h-5" />
+                      <h4 className="font-bold text-sm uppercase tracking-tight">Danger Zone</h4>
                     </div>
-                    <button className="px-6 py-3 bg-red-600 text-white rounded-xl font-button hover:bg-red-700 transition-colors flex items-center gap-3 shadow-sm text-sm shrink-0">
-                      <Trash2 className="w-5 h-5" />
-                      Delete Account
+                    <p className="text-xs text-secondary leading-relaxed max-w-md">
+                      Permanently delete your account and all associated operational data. This action is terminal.
+                    </p>
+                    <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl font-bold text-xs active:scale-95 transition-all shadow-sm">
+                      Delete Property Account
                     </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Business Details Section */}
+            {/* BUSINESS DETAILS */}
             {activeTab === 'business' && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div>
-                  <h3 className="font-h2 text-on-surface mb-1">Business Details</h3>
-                  <p className="font-body-sm text-secondary">This information will appear on public-facing pages and receipts.</p>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="font-label-caps text-on-surface-variant uppercase tracking-wider">Company Logo</label>
-                  <div className="flex items-start gap-6">
-                    <div className="w-24 h-24 rounded-2xl bg-surface-container-high border border-surface-container-highest flex items-center justify-center shrink-0 overflow-hidden group cursor-pointer relative">
-                      <CloudUpload className="w-8 h-8 text-secondary group-hover:scale-110 transition-transform" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <span className="text-[10px] font-bold text-white uppercase tracking-wider">Change</span>
+              <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <section>
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-on-surface">Business Details</h3>
+                    <p className="text-xs text-secondary mt-1">Configure your corporate identity and billing profile.</p>
+                  </div>
+                  
+                  <div className="space-y-8 max-w-lg">
+                    <div className="flex items-center gap-6 p-5 bg-surface-container-low rounded-2xl border border-surface-container-highest">
+                      <div className="w-20 h-20 rounded-2xl bg-surface-container-high flex items-center justify-center relative group shrink-0 overflow-hidden border border-surface-container-highest">
+                        <CloudUpload className="w-7 h-7 text-secondary group-hover:scale-110 transition-transform" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
+                          <span className="text-[10px] font-bold text-white uppercase tracking-wider">Change</span>
+                        </div>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-on-surface truncate">Business Logo</p>
+                        <p className="text-[10px] text-secondary mt-1">SVG or Transparent PNG preferred.</p>
+                        <button className="text-[11px] font-bold text-primary hover:underline mt-2">Replace File</button>
                       </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-body-base text-on-surface font-medium mb-1">Select a business logo</p>
-                      <p className="font-body-sm text-secondary mb-3">Recommended size 400x400px. PNG, JPG or SVG.</p>
-                      <button className="text-sm font-button text-primary hover:underline">Remove logo</button>
+
+                    <div className="space-y-5">
+                      <div className="space-y-2.5">
+                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Legal Entity Name</label>
+                        <input type="text" defaultValue="ScopeGuard Operations LLC" className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+                      </div>
+                      <div className="space-y-2.5">
+                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Global Contact Email</label>
+                        <input type="email" placeholder="operations@company.com" className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6">
-                  <div className="flex flex-col gap-2">
-                    <label className="font-label-caps text-on-surface-variant uppercase tracking-wider">Business/Legal Name</label>
-                    <input 
-                      type="text" 
-                      defaultValue="ScopeGuard Operations LLC"
-                      className="bg-surface-container border border-surface-container-highest rounded-lg px-4 py-2.5 font-body-base text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="font-label-caps text-on-surface-variant uppercase tracking-wider">Business Address</label>
-                    <textarea 
-                      rows={3}
-                      placeholder="123 Business Way, Suite 100, City, Country"
-                      className="bg-surface-container border border-surface-container-highest rounded-lg px-4 py-2.5 font-body-base text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                    />
-                    <p className="text-[11px] text-secondary">Accounting departments usually require a physical address on receipts.</p>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="font-label-caps text-on-surface-variant uppercase tracking-wider">Public Contact Email</label>
-                    <input 
-                      type="email" 
-                      placeholder="billing@yourcompany.com"
-                      className="bg-surface-container border border-surface-container-highest rounded-lg px-4 py-2.5 font-body-base text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                  </div>
-                </div>
+                </section>
               </div>
             )}
 
-            {/* Payments Section */}
-            {activeTab === 'payments' && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div>
-                  <h3 className="font-h2 text-on-surface mb-1">Payments & Payouts</h3>
-                  <p className="font-body-sm text-secondary">Connect your Stripe account to securely accept credit cards and bank transfers from your clients.</p>
-                </div>
 
-                <div className="bg-surface-container border border-surface-container-highest rounded-2xl p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stripeConnected ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-primary/5 text-primary'}`}>
-                        <Landmark className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h4 className="font-button text-on-surface">Stripe Connection</h4>
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${stripeConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-                          <span className="text-xs font-semibold text-secondary uppercase tracking-tight">{stripeConnected ? 'Connected' : 'Not Connected'}</span>
+            {/* PAYMENTS SECTION */}
+            {activeTab === 'payments' && (
+              <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <section>
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-on-surface">Payments</h3>
+                    <p className="text-xs text-secondary mt-1">Connect financial services for automated settling.</p>
+                  </div>
+                  <div className="p-6 bg-[#635BFF]/5 border border-[#635BFF]/10 rounded-2xl space-y-6">
+                    <div className="flex flex-col sm:flex-row items-center gap-5 justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-[#635BFF] flex items-center justify-center text-white shadow-lg shadow-[#635BFF]/20">
+                          <Landmark className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-on-surface">Stripe Gateway</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-outline" />
+                            <span className="text-[9px] font-black uppercase text-secondary tracking-wider">Status: Inactive</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    {stripeConnected ? (
-                      <button className="flex items-center gap-2 px-4 py-2 bg-surface-container-high border border-surface-container-highest rounded-lg font-button text-on-surface hover:bg-surface-container-highest transition-colors">
-                        Manage on Stripe
-                        <ExternalLink className="w-4 h-4" />
-                      </button>
-                    ) : (
                       <button 
                         onClick={() => setStripeConnected(true)}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-[#635BFF] text-white rounded-lg font-button hover:opacity-90 transition-opacity shadow-sm"
+                        className="w-full sm:w-auto px-6 py-3 bg-[#635BFF] text-white rounded-xl font-bold text-xs shadow-lg shadow-[#635BFF]/10 active:scale-95 transition-all text-center"
                       >
-                        Connect Stripe
-                        <ChevronRight className="w-4 h-4" />
+                        Connect Account
                       </button>
-                    )}
+                    </div>
+                    <div className="flex gap-4 items-start text-secondary border-t border-[#635BFF]/10 pt-5">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <p className="text-[11px] leading-relaxed italic">
+                        ScopeGuard leverages Stripe to handle all financial transactions securely. Connecting your account takes less than 2 minutes.
+                      </p>
+                    </div>
                   </div>
-                  <div className="p-4 bg-surface-container-low/50 rounded-xl flex gap-3 items-start border border-dashed border-surface-container-highest">
-                    <AlertCircle className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
-                    <p className="text-[12px] text-secondary leading-relaxed">
-                      ScopeGuard uses Stripe to facilitate secure payments. By connecting your account, you agree to Stripe's Services Agreement and the ScopeGuard Terms of Service.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="max-w-xs space-y-6">
-                  <SearchableDropdown 
-                    label="Default Payout Currency"
-                    value="USD"
-                    onChange={() => {}}
-                    hideSearch={true}
-                    options={[
-                      { label: 'USD - US Dollar', value: 'USD' },
-                      { label: 'EUR - Euro', value: 'EUR' },
-                      { label: 'GBP - British Pound', value: 'GBP' },
-                      { label: 'CAD - Canadian Dollar', value: 'CAD' },
-                      { label: 'AUD - Australian Dollar', value: 'AUD' },
-                    ]}
-                  />
-                </div>
+                </section>
               </div>
             )}
 
-            {/* Preferences Section */}
+            {/* PREFERENCES SECTION */}
             {activeTab === 'preferences' && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div>
-                  <h3 className="font-h2 text-on-surface mb-1">Preferences & Notifications</h3>
-                  <p className="font-body-sm text-secondary">Configure how you interact with the app and staying updated on client activity.</p>
-                </div>
-
-                <div className="space-y-4">
-                  <h4 className="font-label-caps text-on-surface-variant uppercase tracking-wider">Communication</h4>
+              <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <section>
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-on-surface">Preferences</h3>
+                    <p className="text-xs text-secondary mt-1">Tailor your operational alert criteria.</p>
+                  </div>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 bg-surface-container-low border border-surface-container-highest rounded-xl group transition-colors">
-                      <div className="flex gap-4 items-center">
-                        <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
-                          <Mail className="w-5 h-5" />
+                    <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Alert Channels</label>
+                    {[
+                      { id: 'email', label: 'Email Summaries', icon: Mail, checked: notifications.email },
+                      { id: 'alerts', label: 'Dashboard Notifications', icon: Bell, checked: notifications.alerts }
+                    ].map((pref) => (
+                      <div key={pref.id} className="flex items-center justify-between p-5 bg-surface-container-low border border-surface-container-highest rounded-2xl hover:border-outline-variant transition-colors group">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <pref.icon className="w-5 h-5 text-secondary group-hover:text-primary transition-colors" />
+                          <p className="text-sm font-bold text-on-surface truncate">{pref.label}</p>
                         </div>
-                        <div>
-                          <p className="font-button text-on-surface">Email Notifications</p>
-                          <p className="text-xs text-secondary italic">Send me an email when a client approves or pays a scope.</p>
-                        </div>
-                      </div>
-                      <div className="relative inline-flex items-center cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          checked={notifications.email} 
-                          onChange={(e) => setNotifications(prev => ({ ...prev, email: e.target.checked }))}
-                          className="sr-only peer" 
-                        />
-                        <div className="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary transition-colors"></div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-surface-container-low border border-surface-container-highest rounded-xl group transition-colors">
-                      <div className="flex gap-4 items-center">
-                        <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
-                          <Bell className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="font-button text-on-surface">App Alerts</p>
-                          <p className="text-xs text-secondary italic">Show me smart nudges when deadlines are approaching.</p>
+                        <div className="relative inline-flex items-center cursor-pointer shrink-0">
+                          <input 
+                            type="checkbox" 
+                            checked={pref.checked} 
+                            onChange={(e) => setNotifications(prev => ({ ...prev, [pref.id]: e.target.checked }))}
+                            className="sr-only peer" 
+                          />
+                          <div className="w-10 h-5 bg-surface-container-high rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all transition-colors" />
                         </div>
                       </div>
-                      <div className="relative inline-flex items-center cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          checked={notifications.alerts} 
-                          onChange={(e) => setNotifications(prev => ({ ...prev, alerts: e.target.checked }))}
-                          className="sr-only peer" 
-                        />
-                        <div className="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary transition-colors"></div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                </div>
-
-                <div className="pt-6 border-t border-surface-container-highest space-y-6">
-                  <div className="flex flex-col gap-2 max-w-sm">
-                    <label className="font-label-caps text-on-surface-variant uppercase tracking-wider">Default Expiration</label>
-                    <div className="flex items-center gap-3 mt-1">
-                      <input 
-                        type="number" 
-                        defaultValue={7}
-                        className="bg-surface-container border border-surface-container-highest rounded-lg px-4 py-2.5 font-body-base text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 w-24 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <span className="text-sm text-secondary font-medium">days for new scopes</span>
-                    </div>
-                    <p className="text-[11px] text-secondary italic mt-1 font-medium">This automatically sets a 'Valid Until' date for every new scope you create.</p>
-                  </div>
-
-                  <div className="flex flex-col gap-2 max-w-sm">
-                    <SearchableDropdown 
-                      label="Visual Currency (UI Only)"
-                      value="USD"
-                      onChange={() => {}}
-                      hideSearch={true}
-                      placeholder="Select UI currency"
-                      options={[
-                        { label: 'USD ($)', value: 'USD' },
-                        { label: 'EUR (€)', value: 'EUR' },
-                        { label: 'GBP (£)', value: 'GBP' },
-                        { label: 'CAD (C$)', value: 'CAD' },
-                        { label: 'AUD (A$)', value: 'AUD' },
-                      ]}
-                    />
-                    <p className="text-[11px] text-secondary italic mt-1 font-medium flex items-center gap-1.5">
-                      <Globe className="w-3 h-3" />
-                      Changes symbols across the dashboard for visual consistency.
-                    </p>
-                  </div>
-                </div>
+                </section>
               </div>
             )}
 
-            <div className="mt-10 pt-6 border-t border-surface-container-highest flex justify-end gap-3">
-              <button className="px-6 py-2.5 bg-primary text-on-primary rounded-xl font-button hover:opacity-90 transition-all shadow-md">
+            {/* SAVE BUTTON */}
+            <div className="mt-10 pt-6 border-t border-surface-container-highest flex justify-end">
+              <button className="w-full sm:w-auto px-10 py-3.5 bg-primary text-on-primary rounded-xl font-bold text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all">
                 Save Changes
               </button>
             </div>
           </div>
-        </main>
+        </div>
       </div>
+
       <ConfirmDialog
         isOpen={showLogoutConfirm}
-        title="Confirm Log Out"
-        message="Are you sure you want to log out of your account? You will need to sign in again to access ScopeGuard."
-        confirmText="Log Out"
-        cancelText="Cancel"
+        title="Continue to Logout?"
+        message="Active sessions will be invalidated."
+        confirmText="Confirm"
+        cancelText="Stay"
         isDestructive={true}
         onConfirm={() => {
           setShowLogoutConfirm(false);

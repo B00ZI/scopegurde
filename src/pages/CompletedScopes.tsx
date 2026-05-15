@@ -47,9 +47,9 @@ export function CompletedScopesPage({ onViewScope }: { onViewScope: (scope: any)
   // --- BUSINESS LOGIC: FILTERING & SORTING ---
 
   const filteredScopes = scopes.filter(s => {
-    const matchesSearch = s.client.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          s.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          s.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (s.client?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          s.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          s.id?.toLowerCase().includes(searchTerm.toLowerCase())) || false;
     
     if (!matchesSearch) return false;
     if (filters.client && s.client !== filters.client) return false;
@@ -122,7 +122,7 @@ export function CompletedScopesPage({ onViewScope }: { onViewScope: (scope: any)
   ];
 
   return (
-    <div className="max-w-container-max mx-auto pt-2 pb-8 animate-in fade-in duration-300">
+    <div className="max-w-7xl mx-auto pt-2 pb-8 animate-in fade-in duration-300">
       <PageHeader 
         title="Completed Scopes History" 
         subtitle="A record of your operational performance and finalized scope changes."
@@ -130,12 +130,20 @@ export function CompletedScopesPage({ onViewScope }: { onViewScope: (scope: any)
 
       {/* Stats row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {stats.map((stat) => (
-          <StatCard 
-            key={stat.label}
-            {...stat}
-          />
-        ))}
+        {stats.map((stat) => {
+          const { label, value, trend, icon, color, onClick } = stat;
+          return (
+            <StatCard 
+              key={label}
+              label={label}
+              value={value}
+              trend={trend}
+              icon={icon}
+              color={color as any}
+              onClick={onClick as any}
+            />
+          );
+        })}
       </div>
 
       <div className="flex flex-col gap-4 mb-8">
@@ -243,9 +251,11 @@ export function CompletedScopesPage({ onViewScope }: { onViewScope: (scope: any)
         </AnimatePresence>
       </div>
 
-      <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl shadow-sm overflow-hidden flex flex-col">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[800px]">
+      {/* Data Display */}
+      <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl shadow-sm overflow-hidden flex flex-col mx-4 sm:mx-0">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-full">
             <thead>
               <tr className="bg-surface-container-low border-b border-surface-container-highest">
                 <th 
@@ -300,7 +310,7 @@ export function CompletedScopesPage({ onViewScope }: { onViewScope: (scope: any)
                   <td className="py-4 px-6 text-right w-16">
                     <button
                       onClick={(e) => handleUncomplete(e, row.id)}
-                      className="p-2 text-secondary bg-surface rounded-lg border border-surface-container-highest hover:bg-surface-container hover:text-on-surface transition-all shadow-sm flex items-center justify-center ml-auto group-hover:opacity-100 opacity-50 tooltip-trigger"
+                      className="p-2 text-secondary bg-surface rounded-lg border border-surface-container-highest hover:bg-surface-container hover:text-on-surface transition-all shadow-sm flex items-center justify-center ml-auto group-hover:opacity-100 opacity-50"
                       title="Undo Completion"
                     >
                       <Undo2 className="w-4 h-4" />
@@ -308,16 +318,54 @@ export function CompletedScopesPage({ onViewScope }: { onViewScope: (scope: any)
                   </td>
                 </tr>
               ))}
-              {filteredScopes.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-secondary">
-                    No completed scopes found matching your criteria.
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-surface-container-highest">
+          {sortedScopes.map((row) => (
+            <div 
+              key={row.id} 
+              onClick={() => onViewScope(row)}
+              className="p-5 active:bg-surface-container transition-colors"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex-1 pr-4">
+                  <p className="text-[10px] font-black text-outline uppercase tracking-widest mb-1">{row.client}</p>
+                  <h4 className="font-bold text-on-surface text-base leading-tight">{row.description}</h4>
+                  <p className="text-[10px] text-secondary mt-1 font-bold">#{row.id}</p>
+                </div>
+                <StatusBadge status={row.status as any} size="sm" />
+              </div>
+              <div className="flex items-center justify-between mt-6">
+                <div>
+                  <p className="text-[9px] font-black text-outline uppercase tracking-widest mb-0.5">Amount</p>
+                  <p className="text-lg font-bold text-primary">{row.amount}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] font-black text-outline uppercase tracking-widest mb-0.5">Finished</p>
+                  <p className="text-xs font-bold text-on-surface">{row.completedAt}</p>
+                </div>
+              </div>
+              <div className="mt-6 pt-4 border-t border-surface-container-highest flex justify-end">
+                <button
+                  onClick={(e) => handleUncomplete(e, row.id)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container border border-surface-container-highest text-secondary text-[11px] font-bold active:scale-95 transition-transform"
+                >
+                  <Undo2 className="w-3 h-3" />
+                  Undo Completion
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {(sortedScopes.length === 0) && (
+          <div className="p-12 text-center text-secondary bg-surface-container-low/30">
+            No completed scopes found matching your criteria.
+          </div>
+        )}
       </div>
     </div>
   );

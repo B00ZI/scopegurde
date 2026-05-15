@@ -29,8 +29,8 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
     .split('\n')
     .filter((line: string) => line.trim().length > 0);
   return (
-    <div className="min-h-screen bg-surface-container-low py-16 px-4 selection:bg-primary/20 font-sans">
-      <div className="max-w-2xl mx-auto space-y-10">
+    <div className="min-h-screen bg-surface-container-low py-8 sm:py-16 px-4 selection:bg-primary/20 font-sans">
+      <div className="max-w-2xl mx-auto space-y-6 sm:space-y-10">
         
         {/* Brand Header: Simulates the white-labeled agency name */}
         <div className="text-center space-y-4">
@@ -47,38 +47,38 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
         <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl shadow-xl overflow-hidden">
           
           {/* Header Section: Title and Metadata */}
-          <div className="p-10 space-y-4">
-            <h2 className="text-[32px] font-extrabold text-on-surface leading-[1.15] tracking-tight">
+          <div className="p-6 sm:p-10 space-y-6 text-center sm:text-left">
+            <h2 className="text-2xl sm:text-[32px] font-extrabold text-on-surface leading-[1.15] tracking-tight">
               {details.title || 'Additional Revision Cycle'}
             </h2>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-2">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-secondary">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 justify-center sm:justify-start">
+              <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                <p className="text-xs sm:text-sm font-medium text-secondary">
                   Requested on <span className="text-on-surface/80">{formattedDate}</span>
                 </p>
-                <div className="w-1 h-1 rounded-full bg-surface-container-highest" />
-                <p className="text-sm font-medium text-secondary">
+                <div className="hidden sm:block w-1 h-1 rounded-full bg-surface-container-highest" />
+                <p className="text-xs sm:text-sm font-medium text-secondary">
                   Project: <span className="text-primary font-bold">{details.projectName || 'Q4 Strategy Deck'}</span>
                 </p>
               </div>
               
               {details.validUntil && (
-                <>
+                <div className="flex items-center justify-center sm:justify-start gap-2">
                   <div className="hidden sm:block w-1 h-1 rounded-full bg-surface-container-highest" />
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 w-fit">
                     <Clock className="w-3.5 h-3.5 text-amber-600" />
-                    <p className="text-xs font-bold text-amber-700">
+                    <p className="text-[10px] sm:text-xs font-bold text-amber-700">
                       Offer valid until {new Date(details.validUntil).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                   </div>
-                </>
+                </div>
               )}
             </div>
           </div>
 
           {/* Scope Definitions Map: Parses the textarea input into bullet points */}
           <div className="border-t border-surface-container-highest">
-            <div className="p-10 space-y-6">
+            <div className="p-6 sm:p-10 space-y-6">
               <h3 className="text-[11px] font-bold text-primary uppercase tracking-[0.2em]">What's Included</h3>
               <ul className="space-y-5">
                 {deliverablesList.length > 0 ? (
@@ -113,9 +113,9 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
           </div>
 
           {/* Impact/Cost Bar: Highlights the most critical info for the client */}
-          <div className="bg-surface-container-low border-t border-b border-surface-container-highest p-10">
-            <div className="flex items-center justify-between gap-8">
-              <div className="flex items-center gap-4">
+          <div className="bg-surface-container-low border-t border-b border-surface-container-highest p-6 sm:p-10">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-8 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="w-14 h-14 bg-surface-container-lowest rounded-2xl border border-surface-container-highest flex items-center justify-center shadow-sm">
                   <Clock className="w-7 h-7 text-primary" />
                 </div>
@@ -124,18 +124,18 @@ export function ApprovalPortalPage({ details, onApprove, onDecline }: ApprovalPo
                   <p className="text-xl font-bold text-on-surface">+{details.extraTimeDays || '3'} Business Days</p>
                 </div>
               </div>
-              <div className="text-right space-y-0.5">
+              <div className="text-center sm:text-right space-y-0.5">
                 <p className="text-[10px] font-bold text-outline uppercase tracking-widest">Additional Cost</p>
-                <div className="flex items-baseline justify-end gap-1">
+                <div className="flex items-baseline justify-center sm:justify-end gap-1">
                   <span className="text-xl font-bold text-on-surface/40 leading-none">$</span>
-                  <span className="text-[40px] font-bold text-on-surface leading-none tracking-tight">{details.priceAdjustment || '850.00'}</span>
+                  <span className="text-3xl sm:text-[40px] font-bold text-on-surface leading-none tracking-tight">{details.priceAdjustment || '850.00'}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Action Area: Approval Options */}
-          <div className="p-10 space-y-8">
+          <div className="p-6 sm:p-10 space-y-8">
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* Secondary Action: Defer payment */}

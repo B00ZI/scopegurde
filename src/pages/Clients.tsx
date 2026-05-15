@@ -42,9 +42,9 @@ export function ClientsPage({ onAddClient, onViewClient, onEditClient, onDeleteC
 
   // --- BUSINESS LOGIC: FILTERING ---
   const filteredClients = MOCK_CLIENTS.filter(client => {
-    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          client.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (client.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          client.id?.toLowerCase().includes(searchTerm.toLowerCase())) || false;
     
     if (!matchesSearch) return false;
 
@@ -118,7 +118,7 @@ export function ClientsPage({ onAddClient, onViewClient, onEditClient, onDeleteC
   };
 
   return (
-    <div className="max-w-container-max mx-auto pt-2 pb-8">
+    <div className="max-w-7xl mx-auto pt-2 pb-8">
       {/* Header Injection */}
       <PageHeader 
         title="Clients Directory" 
@@ -136,46 +136,54 @@ export function ClientsPage({ onAddClient, onViewClient, onEditClient, onDeleteC
 
       {/* Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        {stats.map((stat) => (
-          <StatCard 
-            key={stat.label}
-            {...stat}
-          />
-        ))}
+        {stats.map((stat) => {
+          const { label, value, trend, icon, color, onClick } = stat;
+          return (
+            <StatCard 
+              key={label}
+              label={label}
+              value={value}
+              trend={trend}
+              icon={icon}
+              color={color as any}
+              onClick={onClick as any}
+            />
+          );
+        })}
       </div>
 
       {/* SECTION 1: Toolbar (Search & Filters) */}
       <div className="flex flex-col gap-4 mb-8">
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-secondary" />
             <input
               type="text"
-              placeholder="Search by client name, email, or ID..."
+              placeholder="Search clients..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-surface-container-lowest border border-surface-container-highest rounded-xl pl-11 pr-4 py-3 h-[48px] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow text-on-surface placeholder:text-secondary shadow-sm"
+              className="w-full bg-surface-container-lowest border border-surface-container-highest rounded-xl pl-10 sm:pl-11 pr-4 py-3 h-[44px] sm:h-[48px] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow text-sm sm:text-base text-on-surface placeholder:text-secondary shadow-sm"
             />
           </div>
           <div className="flex gap-2">
             <button 
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`relative px-4 h-[48px] rounded-xl border font-button flex items-center justify-center gap-2 transition-colors shadow-sm ${
+              className={`flex-1 sm:flex-none relative px-4 h-[44px] sm:h-[48px] rounded-xl border font-button flex items-center justify-center gap-2 transition-colors shadow-sm ${
                 isFilterOpen || activeFiltersCount > 0 
                 ? 'bg-primary/5 text-primary border-primary/20 hover:bg-primary/10' 
                 : 'bg-surface-container-lowest border-surface-container-highest text-secondary hover:bg-surface-container hover:text-on-surface'
               }`}
             >
-              <Filter className="w-5 h-5" />
-              <span>Filters</span>
+              <Filter className="w-4 sm:w-5 h-4 sm:h-5" />
+              <span className="text-xs sm:text-sm">Filters</span>
               {activeFiltersCount > 0 && (
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary text-on-primary text-[10px] font-bold">
+                <span className="flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-primary text-on-primary text-[9px] sm:text-[10px] font-bold">
                   {activeFiltersCount}
                 </span>
               )}
             </button>
-            <button className="flex items-center justify-center w-[48px] h-[48px] bg-surface-container-lowest border border-surface-container-highest rounded-xl text-secondary hover:bg-surface-container hover:text-on-surface transition-colors shadow-sm">
-              <Download className="w-5 h-5" />
+            <button className="flex items-center justify-center w-[44px] sm:w-[48px] h-[44px] sm:h-[48px] bg-surface-container-lowest border border-surface-container-highest rounded-xl text-secondary hover:bg-surface-container hover:text-on-surface transition-colors shadow-sm">
+              <Download className="w-4 sm:w-5 h-4 sm:h-5" />
             </button>
           </div>
         </div>
@@ -241,9 +249,10 @@ export function ClientsPage({ onAddClient, onViewClient, onEditClient, onDeleteC
         </AnimatePresence>
       </div>
 
-      {/* SECTION 2: Data Table */}
+      {/* SECTION 2: Data Display */}
       <div className="bg-surface-container-lowest border border-surface-container-highest rounded-lg overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
                <tr className="bg-surface-container-low border-b border-surface-container-highest">
@@ -282,19 +291,13 @@ export function ClientsPage({ onAddClient, onViewClient, onEditClient, onDeleteC
                   className="border-b border-surface-container-highest hover:bg-surface transition-colors cursor-pointer group"
                 >
                   <td className="py-4 px-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
-                        {client.name.substring(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="font-medium text-on-surface group-hover:text-primary transition-colors">{client.name}</p>
-                        <p className="text-secondary text-xs">ID: {client.id} • {client.email}</p>
-                      </div>
+                    <div>
+                      <p className="font-medium text-on-surface group-hover:text-primary transition-colors">{client.name}</p>
+                      <p className="text-secondary text-xs">ID: {client.id} • {client.email}</p>
                     </div>
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2">
-                      {/* Status indicator dot */}
                       <span className={`w-2 h-2 rounded-full ${client.ongoingScopes > 0 ? 'bg-primary' : 'bg-outline-variant'}`}></span>
                       <span className="text-on-surface font-medium">{client.ongoingScopes}</span>
                     </div>
@@ -311,31 +314,11 @@ export function ClientsPage({ onAddClient, onViewClient, onEditClient, onDeleteC
                     >
                       <MoreVertical className="w-5 h-5" />
                     </button>
-                    
                     {openDropdownId === client.id && (
-                      <div className="absolute right-8 top-12 z-10 w-48 bg-surface border border-surface-container-highest rounded-lg shadow-lg py-1 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                        <button 
-                          className="w-full text-left px-4 py-2 font-body-sm text-on-surface hover:bg-surface-container flex items-center gap-2 transition-colors"
-                          onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); onViewClient(client); }}
-                        >
-                          <ExternalLink className="w-4 h-4" /> Open
-                        </button>
-                        <button 
-                          className="w-full text-left px-4 py-2 font-body-sm text-on-surface hover:bg-surface-container flex items-center gap-2 transition-colors"
-                          onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); onEditClient(client); }}
-                        >
-                          <Edit2 className="w-4 h-4" /> Edit
-                        </button>
-                        <button 
-                          className="w-full text-left px-4 py-2 font-body-sm text-error hover:bg-error/10 flex items-center gap-2 transition-colors"
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            setOpenDropdownId(null); 
-                            setClientToDelete(client);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" /> Delete
-                        </button>
+                      <div className="absolute right-8 top-12 z-10 w-48 bg-surface border border-surface-container-highest rounded-lg shadow-lg py-1 overflow-hidden">
+                        <button className="w-full text-left px-4 py-2 hover:bg-surface-container flex items-center gap-2" onClick={(e) => { e.stopPropagation(); onViewClient(client); }}><ExternalLink className="w-4 h-4" /> Open</button>
+                        <button className="w-full text-left px-4 py-2 hover:bg-surface-container flex items-center gap-2" onClick={(e) => { e.stopPropagation(); onEditClient(client); }}><Edit2 className="w-4 h-4" /> Edit</button>
+                        <button className="w-full text-left px-4 py-2 hover:bg-error/10 text-error flex items-center gap-2" onClick={(e) => { e.stopPropagation(); setClientToDelete(client); }}><Trash2 className="w-4 h-4" /> Delete</button>
                       </div>
                     )}
                   </td>
@@ -344,6 +327,50 @@ export function ClientsPage({ onAddClient, onViewClient, onEditClient, onDeleteC
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-surface-container-highest">
+          {sortedClients.map((client) => (
+            <div 
+              key={client.id} 
+              onClick={() => onViewClient(client)}
+              className="p-4 active:bg-surface-container transition-colors"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="font-bold text-on-surface">{client.name}</p>
+                  <p className="text-secondary text-[10px] uppercase font-bold tracking-wider">{client.id}</p>
+                </div>
+                <button 
+                  className="p-2 -mr-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenDropdownId(openDropdownId === client.id ? null : client.id);
+                  }}
+                >
+                  <MoreVertical className="w-5 h-5 text-secondary" />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center bg-surface-container-low rounded-lg p-3">
+                <div>
+                  <p className="text-[9px] font-bold text-secondary uppercase mb-1">Ongoing</p>
+                  <p className="text-sm font-bold text-on-surface">{client.ongoingScopes}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold text-secondary uppercase mb-1">Done</p>
+                  <p className="text-sm font-bold text-on-surface">{client.changeOrders}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold text-secondary uppercase mb-1">Revenue</p>
+                  <p className="text-sm font-bold text-primary truncate">
+                    {client.lifetimeRevenue?.split(' ')[0] || `$${(client.totalRevenue || 0).toLocaleString()}`}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
         {/* Pagination Footer */}
         <div className="px-6 py-4 border-t border-surface-container-highest bg-surface-container-lowest flex items-center justify-between">
           <span className="font-body-sm text-secondary">Showing 1-4 of 42 clients</span>
@@ -356,7 +383,6 @@ export function ClientsPage({ onAddClient, onViewClient, onEditClient, onDeleteC
             </button>
           </div>
         </div>
-      </div>
 
       <ConfirmDialog 
         isOpen={!!clientToDelete}

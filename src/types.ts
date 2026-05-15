@@ -9,9 +9,13 @@ export interface Client {
   id: string;
   name: string;
   email: string;
+  contact: string;
   ongoingScopes: number;
   changeOrders: number;
   totalRevenue: number;
+  industry?: string;
+  lifetimeRevenue?: string | number;
+  status: 'Active' | 'Inactive' | 'Archived' | string;
   avatar?: string;
 }
 
@@ -31,6 +35,8 @@ export interface ChangeOrder {
     avatar?: string;
   };
 }
+
+export type Scope = ChangeOrder;
 
 export interface Notification {
   id: string;

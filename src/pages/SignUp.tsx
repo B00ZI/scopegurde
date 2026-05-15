@@ -93,11 +93,11 @@ export function SignUpPage({ onSignUpSuccess, onNavigateToLogin }: SignUpProps) 
       )}
 
       {/* RIGHT: Form Area */}
-      <div className={`w-full flex-col justify-center p-6 sm:p-12 overflow-y-auto min-h-screen flex ${step === 1 ? 'md:w-[60%]' : 'md:w-full items-center'}`}>
-        <div className={`w-full mx-auto relative flex-1 flex flex-col justify-center ${step === 3 ? 'max-w-4xl' : 'max-w-md'}`}>
+      <div className={`w-full flex-col justify-center p-5 sm:p-12 overflow-y-auto min-h-screen flex ${step === 1 ? 'md:w-[60%]' : 'md:w-full items-center'}`}>
+        <div className={`w-full mx-auto relative flex-1 flex flex-col justify-center py-8 ${step === 3 ? 'max-w-4xl' : 'max-w-md'}`}>
           
           <div className="flex justify-start mb-6 md:hidden">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-xl">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-xl shadow-sm">
               <Building2 className="w-6 h-6 text-primary" />
             </div>
           </div>

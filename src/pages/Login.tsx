@@ -74,18 +74,18 @@ export function LoginPage({ onLoginSuccess, onNavigateToSignUp }: LoginProps) {
       </div>
 
       {/* RIGHT: Login Form Area */}
-      <div className="w-full md:w-[60%] flex items-center justify-center p-8 sm:p-12">
-        <div className="w-full max-w-md">
+      <div className="w-full md:w-[60%] flex items-center justify-center p-6 sm:p-12 overflow-y-auto">
+        <div className="w-full max-w-md my-auto">
           <div className="text-center md:text-left mb-8">
             <div className="flex justify-center mb-6 md:hidden">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-xl">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-xl shadow-sm">
                 <Building2 className="w-6 h-6 text-primary" />
               </div>
             </div>
-            <h2 className="text-3xl font-h2 font-bold text-on-surface tracking-tight mb-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight mb-2">
               Welcome back
             </h2>
-            <p className="text-secondary font-body-base">
+            <p className="text-secondary font-body-base text-sm sm:text-base">
               Sign in to manage your workspace and active projects.
             </p>
           </div>

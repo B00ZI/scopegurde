@@ -1,7 +1,15 @@
 import React from 'react';
-import { AlertTriangle, CheckCircle, Banknote, CheckCheck, Zap, UserCircle, Eye, Clock, CreditCard, CheckCircle2 } from 'lucide-react';
+import { CheckCheck, Bell, CheckCircle2, Eye, CreditCard, AlertTriangle } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 import { MOCK_NOTIFICATIONS } from '../lib/mockData';
+
+const ICON_MAP: Record<string, any> = {
+  'check': CheckCircle2,
+  'eye': Eye,
+  'credit-card': CreditCard,
+  'alert': AlertTriangle,
+  'bell': Bell
+};
 
 interface NotificationsPageProps {
   onViewScope?: (scope: any) => void;
@@ -26,8 +34,8 @@ export function NotificationsPage({ onViewScope }: NotificationsPageProps) {
     if (onViewScope && notification.category !== 'System Alerts') {
       let derivedStatus: 'Draft' | 'Sent' | 'Approved' | 'Paid' | 'Expired' | 'Completed' = 'Sent';
       
-      if (notification.title.includes('Paid')) derivedStatus = 'Paid';
-      else if (notification.title.includes('Approved')) derivedStatus = 'Approved';
+      if (notification.title && notification.title.includes('Paid')) derivedStatus = 'Paid';
+      else if (notification.title && notification.title.includes('Approved')) derivedStatus = 'Approved';
       else if (notification.category === 'Deadline Approaching') derivedStatus = 'Expired';
       
       onViewScope({
@@ -56,59 +64,54 @@ export function NotificationsPage({ onViewScope }: NotificationsPageProps) {
         }
       />
 
-      <div className="max-w-4xl mx-auto grid grid-cols-1 gap-6">
+      <div className="max-w-4xl mx-auto grid grid-cols-1 gap-6 px-4 sm:px-0">
         
         {/* FEED SECTION */}
         <div className="flex flex-col gap-6">
-          <h3 className="font-label-caps text-secondary uppercase mb-2 tracking-wider">Recent Alerts</h3>
+          <h3 className="text-[10px] font-bold text-secondary uppercase tracking-[0.2em] mb-2">Recent Alerts</h3>
           
           {/* NOTIFICATION ITEM MAPPING */}
           {MOCK_NOTIFICATIONS.map(notification => {
-            const Icon = notification.icon;
+            const Icon = ICON_MAP[notification.iconName] || Bell;
             return (
             <div 
               key={notification.id}
               onClick={() => handleNotificationClick(notification)}
-              className={`bg-surface-container-lowest border rounded-xl p-6 flex flex-col sm:flex-row items-start gap-4 sm:gap-6 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer relative overflow-hidden group shadow-sm ${
+              className={`bg-surface-container-lowest border rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start gap-4 sm:gap-6 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer relative overflow-hidden group shadow-sm ${
                 notification.type === 'warning' ? 'border-error/30 bg-error-container/5' : 'border-surface-container-highest'
               }`}
             >
               {/* Visual indicator bar for warnings */}
               {notification.type === 'warning' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-error"></div>}
               
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
+              <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-sm ${
                 notification.type === 'warning' ? 'bg-error-container text-on-error-container' : 
-                notification.type === 'success' ? 'bg-primary-container text-on-primary-container' : 'bg-secondary-container text-on-secondary-container'
+                notification.type === 'success' ? 'bg-primary-container text-on-primary-container' : 'bg-surface-container-high text-on-surface'
               }`}>
                 <Icon className="w-6 h-6" />
               </div>
               
               <div className="flex-1 w-full">
-                <div className="flex flex-col sm:flex-row justify-between items-start mb-1 gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-secondary bg-surface-container px-2 py-0.5 rounded-full">{notification.category}</span>
-                    <span className={`font-body-sm font-medium sm:hidden ${notification.type === 'warning' ? 'text-error' : 'text-secondary'}`}>
-                      {notification.time}
-                    </span>
-                  </div>
-                  <span className={`hidden sm:block font-body-sm font-medium ${notification.type === 'warning' ? 'text-error' : 'text-secondary'}`}>
+                <div className="flex flex-row justify-between items-start mb-2 gap-2">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-secondary bg-surface-container px-2 py-0.5 rounded-md">{notification.category}</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${notification.type === 'warning' ? 'text-error' : 'text-outline/70'}`}>
                     {notification.time}
                   </span>
                 </div>
-                <h4 className="font-h3 text-on-surface mb-2">{notification.title}</h4>
-                <p className="font-body-base text-on-surface-variant mb-4 leading-relaxed">
+                <h4 className="text-base sm:text-lg font-bold text-on-surface mb-2 leading-tight">{notification.title}</h4>
+                <p className="text-sm sm:text-base text-on-surface-variant mb-5 leading-relaxed">
                   {notification.message}
                 </p>
-                <div className="flex gap-4">
-                  <button className={`font-button px-4 py-2 rounded-lg transition-colors shadow-sm ${
-                    notification.type === 'warning' ? 'bg-error text-on-primary hover:bg-on-error-container' : 
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-auto">
+                  <button className={`w-full sm:w-auto font-bold px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 ${
+                    notification.type === 'warning' ? 'bg-error text-on-primary hover:bg-error/90' : 
                     notification.type === 'success' ? 'bg-primary text-on-primary hover:bg-primary/90' :
-                    'text-primary border border-primary hover:bg-primary hover:text-on-primary'
+                    'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'
                   }`}>
                     {notification.actionLabel}
                   </button>
                   {notification.type === 'warning' && (
-                    <button className="font-button text-secondary hover:text-on-surface px-4 py-2">Dismiss</button>
+                    <button className="w-full sm:w-auto font-bold text-error/80 hover:text-error hover:bg-error/5 py-2.5 rounded-xl transition-colors">Dismiss</button>
                   )}
                 </div>
               </div>

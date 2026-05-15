@@ -2,6 +2,7 @@ import React from 'react';
 import { LucideIcon } from 'lucide-react';
 
 interface StatCardProps {
+  key?: string | number;
   label: string;
   value: string;
   trend?: string;
@@ -32,7 +33,7 @@ export function StatCard({ label, value, trend, icon: Icon, color, onClick }: St
         <h3 className="text-xs font-semibold text-secondary uppercase tracking-wider">{label}</h3>
       </div>
       <div className="relative z-10 flex items-baseline gap-2 mt-1">
-        <p className="text-3xl font-bold text-on-surface tracking-tight truncate" title={value}>{value}</p>
+        <p className="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight truncate" title={value}>{value}</p>
         {trend && (
           <span className={`text-xs font-medium ${
             trend.startsWith('+') || trend.includes('7d') || trend === 'High' 

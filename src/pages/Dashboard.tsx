@@ -37,7 +37,7 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
   const [snackbarTimeout, setSnackbarTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // --- STATS CONFIGURATION ---
-  const stats = [
+  const stats: any[] = [
     { 
       label: 'Monthly Revenue', 
       value: '$242,500', 
@@ -113,9 +113,9 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
   };
 
   const filteredScopes = activeScopes.filter(scope => {
-    const matchesSearch = scope.client.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          scope.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          scope.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (scope.client?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          scope.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          scope.id?.toLowerCase().includes(searchTerm.toLowerCase())) || false;
     if (!matchesSearch) return false;
     
     if (filters.status && scope.status !== filters.status) return false;
@@ -146,7 +146,8 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
         } else if (sortConfig.key === 'time') {
           // Mock time sorting logic (very basic since we use string like '2h ago')
           // In a real app we'd use ISO timestamps
-          const getMinutes = (t: string) => {
+          const getMinutes = (t: any) => {
+            if (!t || typeof t !== 'string') return 0;
             if (t.includes('h ago')) return parseInt(t) * 60;
             if (t.includes('Yesterday')) return 24 * 60;
             return 0;
@@ -187,29 +188,37 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
   };
 
   return (
-    <div className="max-w-container-max mx-auto pt-2 pb-8">
+    <div className="max-w-7xl mx-auto pt-2 pb-8">
       <PageHeader 
         title="Dashboard" 
         subtitle="Overview of your logistics performance and scopes."
       />
 
       {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        {stats.map((stat) => (
-          <StatCard 
-            key={stat.label}
-            {...stat}
-          />
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
+        {stats.map((stat) => {
+          const { label, value, trend, icon, color, onClick } = stat;
+          return (
+            <StatCard 
+              key={label}
+              label={label}
+              value={value}
+              trend={trend}
+              icon={icon}
+              color={color}
+              onClick={onClick}
+            />
+          );
+        })}
       </div>
 
       <div className="flex flex-col gap-8">
         <div>
           {/* Header & Global View CTA */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <h3 className="font-h3 text-on-surface">Active Scopes</h3>
             <div className="flex items-center gap-4">
-               <button className="text-primary font-button flex items-center gap-1 hover:underline">
+               <button className="text-primary font-button flex items-center gap-1 hover:underline text-sm sm:text-base">
                  View All <ArrowUpRight className="w-4 h-4" />
                </button>
             </div>
@@ -217,36 +226,36 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
 
           {/* Utility Bar: Search & Global Actions */}
           <div className="flex flex-col gap-4 mb-8">
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-secondary" />
                 <input
                   type="text"
                   placeholder="Search activity..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-surface-container-lowest border border-surface-container-highest rounded-xl pl-11 pr-4 py-3 h-[48px] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow text-on-surface placeholder:text-secondary shadow-sm"
+                  className="w-full bg-surface-container-lowest border border-surface-container-highest rounded-xl pl-10 sm:pl-11 pr-4 py-3 h-[44px] sm:h-[48px] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow text-sm sm:text-base text-on-surface placeholder:text-secondary shadow-sm"
                 />
               </div>
               <div className="flex gap-2">
                 <button 
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className={`relative px-4 h-[48px] rounded-xl border font-button flex items-center justify-center gap-2 transition-colors shadow-sm ${
+                  className={`flex-1 sm:flex-none relative px-4 h-[44px] sm:h-[48px] rounded-xl border font-button flex items-center justify-center gap-2 transition-colors shadow-sm ${
                     isFilterOpen || activeFiltersCount > 0 
                     ? 'bg-primary/5 text-primary border-primary/20 hover:bg-primary/10' 
                     : 'bg-surface-container-lowest border-surface-container-highest text-secondary hover:bg-surface-container hover:text-on-surface'
                   }`}
                 >
-                  <Filter className="w-5 h-5" />
-                  <span>Filters</span>
+                  <Filter className="w-4 sm:w-5 h-4 sm:h-5" />
+                  <span className="text-xs sm:text-sm">Filters</span>
                   {activeFiltersCount > 0 && (
-                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary text-on-primary text-[10px] font-bold">
+                    <span className="flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-primary text-on-primary text-[9px] sm:text-[10px] font-bold">
                       {activeFiltersCount}
                     </span>
                   )}
                 </button>
-                <button className="flex items-center justify-center w-[48px] h-[48px] bg-surface-container-lowest border border-surface-container-highest rounded-xl text-secondary hover:bg-surface-container hover:text-on-surface transition-colors shadow-sm">
-                  <Download className="w-5 h-5" />
+                <button className="flex items-center justify-center w-[44px] sm:w-[48px] h-[44px] sm:h-[48px] bg-surface-container-lowest border border-surface-container-highest rounded-xl text-secondary hover:bg-surface-container hover:text-on-surface transition-colors shadow-sm">
+                  <Download className="w-4 sm:w-5 h-4 sm:h-5" />
                 </button>
               </div>
             </div>
@@ -320,9 +329,10 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
             </AnimatePresence>
           </div>
 
-          {/* Data Table */}
+          {/* Data Display */}
           <div className="bg-surface-container-lowest border border-surface-container-highest rounded-lg overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-surface-container-low border-b border-surface-container-highest">
@@ -409,12 +419,67 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
                   </AnimatePresence>
                 </tbody>
               </table>
-              {activeScopes.length === 0 && (
-                <div className="p-8 text-center text-secondary">
-                  No active scopes. You're all caught up!
-                </div>
-              )}
             </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden divide-y divide-surface-container-highest">
+              <AnimatePresence>
+                {sortedScopes.map((row) => {
+                  const isCompleting = completingIds.has(row.id);
+                  return (
+                    <motion.div 
+                      key={row.id} 
+                      layout
+                      initial={{ opacity: 1 }}
+                      animate={isCompleting ? { 
+                        backgroundColor: 'rgba(6, 95, 70, 0.1)', 
+                        opacity: 0,
+                        x: 30
+                      } : { 
+                        opacity: 1,
+                        x: 0
+                      }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => !isCompleting && onViewScope && onViewScope(row)}
+                      className={`p-4 active:bg-surface-container transition-colors ${isCompleting ? 'pointer-events-none' : ''}`}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <p className="font-bold text-on-surface leading-tight">{row.description}</p>
+                          <p className="text-[10px] text-secondary uppercase font-bold tracking-wider mt-1">{row.client}</p>
+                        </div>
+                        <StatusBadge status={row.status as any} size="sm" />
+                      </div>
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Amount</span>
+                          <span className="text-lg font-bold text-primary">{row.amount}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-bold text-secondary text-right">
+                             {row.time}
+                          </span>
+                          {(row.status === 'Paid' || row.status === 'Approved') && !isCompleting && (
+                            <button
+                              onClick={(e) => handleQuickComplete(e, row.id)}
+                              className="p-3 text-white bg-[#065F46] rounded-xl shadow-md active:scale-95"
+                            >
+                              <CheckCircle className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+
+            {activeScopes.length === 0 && (
+              <div className="p-8 text-center text-secondary">
+                No active scopes. You're all caught up!
+              </div>
+            )}
           </div>
         </div>
       </div>

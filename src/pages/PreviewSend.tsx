@@ -94,18 +94,26 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
 
   return (
     <div className="flex flex-col">
-      <div className="flex-1 p-8 max-w-6xl mx-auto w-full flex flex-col gap-10">
+      <div className="flex-1 p-4 sm:p-8 max-w-5xl mx-auto w-full flex flex-col gap-6 sm:gap-10">
+        {/* Navigation / Header */}
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={onBack}
+            className="p-2 hover:bg-surface-container rounded-full transition-colors"
+            title="Back to Edit"
+          >
+            <ArrowLeft className="w-5 h-5 text-secondary" />
+          </button>
+          <div className="flex-1 min-w-0">
+             <h2 className="font-h2 text-on-surface truncate">Final Message Preview</h2>
+             <p className="font-body-sm text-on-surface-variant line-clamp-1">Review the surcharge notification below.</p>
+          </div>
+          <span className="font-label-caps text-on-surface-variant px-3 py-1 bg-surface-container rounded whitespace-nowrap">DRAFT</span>
+        </div>
+
         {/* SECTION 1: Generated Preview Box */}
         <section className="flex flex-col gap-2 w-full">
-          <div className="flex items-center justify-between">
-            <h2 className="font-h2 text-on-surface">Final Message Preview</h2>
-            <div className="flex items-center gap-3">
-              <span className="font-label-caps text-on-surface-variant px-3 py-1 bg-surface-container rounded">DRAFT</span>
-            </div>
-          </div>
-          <p className="font-body-sm text-on-surface-variant">Review the surcharge notification below. You can copy this for WhatsApp or send it directly via email.</p>
-          
-          <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-10 mt-6 shadow-sm min-h-[400px] flex flex-col relative group">
+          <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-10 shadow-sm min-h-[300px] sm:min-h-[400px] flex flex-col relative group">
             {isGenerating ? (
               // Loading State while Gemini is working
               <div className="flex-1 flex flex-col items-center justify-center text-secondary gap-4">

@@ -41,6 +41,14 @@
   --color-outline-variant: var(--outline-variant);
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --width-container-max: 88rem;
+}
+
+@layer utilities {
+  .max-w-container-max {
+    max-width: var(--width-container-max);
+  }
 }
 
 @layer base {
@@ -95,8 +103,12 @@
   }
 
   body {
-    @apply bg-background text-on-background antialiased font-sans;
+    @apply bg-background text-on-background antialiased font-sans overflow-x-hidden;
   }
+}
+
+html {
+  @apply scroll-smooth;
 }
 
 /* 

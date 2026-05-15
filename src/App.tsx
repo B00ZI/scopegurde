@@ -37,6 +37,7 @@ export default function App() {
   // --- NAVIGATION & ROUTING STATE ---
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // --- WORKFLOW: CREATE SCOPE WIZARD ---
   // isCreatingOrder -> orderPreviewDetails -> isPreviewingPortal
@@ -188,6 +189,8 @@ export default function App() {
       <Sidebar 
         currentPage={currentPage} 
         isCollapsed={isSidebarCollapsed}
+        isMobileOpen={isMobileMenuOpen}
+        onCloseMobile={() => setIsMobileMenuOpen(false)}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         onLogout={() => setIsAuthenticated(false)}
         onPageChange={(page) => {
@@ -199,12 +202,14 @@ export default function App() {
           setViewingClient(null);
           setEditingClient(null);
           setViewingScope(null);
+          setIsMobileMenuOpen(false); // Close mobile menu on page change
         }} 
       />
       <div className="flex-1 flex flex-col min-h-screen">
         <TopBar 
           onNewScope={() => setIsCreatingOrder(true)} 
-          isSidebarCollapsed={isSidebarCollapsed} 
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           // Dynamically adjust TopBar title and back button based on active wizard state
           title={
             orderPreviewDetails ? 'Preview & Send' : 
@@ -226,7 +231,7 @@ export default function App() {
           }
         />
         {/* Main Workspace Area */}
-        <main className={`flex-1 ${isSidebarCollapsed ? 'ml-20' : 'ml-64'} transition-all duration-300 ease-in-out px-8 pt-24 pb-8`}>
+        <main className={`flex-1 min-w-0 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'} ml-0 transition-all duration-300 ease-in-out px-4 sm:px-8 pt-24 pb-8`}>
           {renderContent()}
         </main>
       </div>
