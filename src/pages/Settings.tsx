@@ -91,24 +91,24 @@ export function SettingsPage({ onLogout }: { onLogout?: () => void }) {
                     <h3 className="text-xl font-bold text-on-surface">Personal Info</h3>
                     <p className="text-xs text-secondary mt-1">Manage your public identity within the organization.</p>
                   </div>
-                  <div className="space-y-5 max-w-lg">
-                    <div className="space-y-2.5">
-                      <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Full Name</label>
-                      <input 
-                        type="text" 
-                        defaultValue="Jane Doe"
-                        className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                      />
+                    <div className="space-y-6 max-w-lg">
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Full Name</label>
+                        <input 
+                          type="text" 
+                          defaultValue="Jane Doe"
+                          className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Email Address</label>
+                        <input 
+                          type="email" 
+                          defaultValue="jane.doe@example.com"
+                          className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2.5">
-                      <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Email Address</label>
-                      <input 
-                        type="email" 
-                        defaultValue="jane.doe@example.com"
-                        className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                      />
-                    </div>
-                  </div>
                 </section>
 
                 <section className="pt-8 border-t border-surface-container-highest">
@@ -145,18 +145,18 @@ export function SettingsPage({ onLogout }: { onLogout?: () => void }) {
                     <h3 className="text-xl font-bold text-on-surface">Security</h3>
                     <p className="text-xs text-secondary mt-1">Protect your account with high-entropy credentials.</p>
                   </div>
-                  <div className="space-y-5 max-w-lg">
-                    <div className="space-y-2.5">
-                      <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Current Password</label>
+                  <div className="space-y-6 max-w-lg">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Current Password</label>
                       <input type="password" placeholder="••••••••" className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-outline" />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-2.5">
-                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">New Password</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">New Password</label>
                         <input type="password" placeholder="Min 12 chars" className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-outline" />
                       </div>
-                      <div className="space-y-2.5">
-                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Confirm New</label>
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Confirm New</label>
                         <input type="password" placeholder="Repeat" className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-outline" />
                       </div>
                     </div>
@@ -209,13 +209,13 @@ export function SettingsPage({ onLogout }: { onLogout?: () => void }) {
                       </div>
                     </div>
 
-                    <div className="space-y-5">
-                      <div className="space-y-2.5">
-                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Legal Entity Name</label>
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Legal Entity Name</label>
                         <input type="text" defaultValue="ScopeGuard Operations LLC" className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
                       </div>
-                      <div className="space-y-2.5">
-                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Global Contact Email</label>
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Global Contact Email</label>
                         <input type="email" placeholder="operations@company.com" className="w-full bg-surface-container border border-surface-container-highest rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
                       </div>
                     </div>
@@ -273,8 +273,8 @@ export function SettingsPage({ onLogout }: { onLogout?: () => void }) {
                     <h3 className="text-xl font-bold text-on-surface">Preferences</h3>
                     <p className="text-xs text-secondary mt-1">Tailor your operational alert criteria.</p>
                   </div>
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest px-1">Alert Channels</label>
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest block mb-2">Alert Channels</label>
                     {[
                       { id: 'email', label: 'Email Summaries', icon: Mail, checked: notifications.email },
                       { id: 'alerts', label: 'Dashboard Notifications', icon: Bell, checked: notifications.alerts }
@@ -291,7 +291,7 @@ export function SettingsPage({ onLogout }: { onLogout?: () => void }) {
                             onChange={(e) => setNotifications(prev => ({ ...prev, [pref.id]: e.target.checked }))}
                             className="sr-only peer" 
                           />
-                          <div className="w-10 h-5 bg-surface-container-high rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2.5px] after:left-[2.5px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all transition-colors" />
+                          <div className="w-10 h-5 bg-surface-container-high rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5 transition-colors" />
                         </div>
                       </div>
                     ))}

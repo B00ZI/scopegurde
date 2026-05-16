@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Copy, Send, Loader2, Mail, MessageCircle, ChevronUp, Save, FileText } from 'lucide-react';
-import { generateClientMessage } from '../lib/gemini';
 
 interface PreviewSendProps {
   details: any;
@@ -29,20 +28,24 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // --- INITIALIZATION: AI GENERATION ---
+  // --- INITIALIZATION: DYNAMIC MESSAGE GENERATION ---
   useEffect(() => {
-    async function load() {
-      try {
-        const msg = await generateClientMessage(details, tone);
-        setMessage(msg);
-      } catch (error) {
-        console.error('AI Generation Error:', error);
-        setMessage('Error generating preview. Please try again.');
-      } finally {
-        setIsGenerating(false);
+    function generateDynamicMessage() {
+      const portalLink = "https://scopeguard.app/approval-portal/SC-4821";
+      const deadlineStr = details.validUntil ? `by ${details.validUntil}` : "as soon as possible";
+      
+      if (tone === 'friendly') {
+        return `Hi there,\n\nWe've prepared an update regarding "${details.title}".\n\nPlease review and approve the details at your earliest convenience, ideally ${deadlineStr}, so we can keep things moving smoothly along.\n\nYou can access your secure portal right here to see the full details:\n${portalLink}\n\nLet me know if you have any questions!\n\nBest,\nThe ScopeGuard Team`;
+      } else if (tone === 'firm') {
+        return `Attention required:\n\nA new scope adjustment for "${details.title}" requires your approval. \n\nTo avoid any delays in the project schedule, this must be reviewed and approved ${deadlineStr}.\n\nPlease review the complete details and submit your approval via your secure client portal:\n${portalLink}\n\nThank you,\nScopeGuard Operations`;
+      } else {
+        // neutral
+        return `Hello,\n\nA scope adjustment for "${details.title}" is ready for your review.\n\nPlease follow the link below to review and approve the details ${deadlineStr}.\n\nSecure Client Portal:\n${portalLink}\n\nRegards,\nThe ScopeGuard Team`;
       }
     }
-    load();
+    
+    setMessage(generateDynamicMessage());
+    setIsGenerating(false);
   }, [details, tone]);
 
   // --- REUSABLE LOGIC: CLICK OUTSIDE ---

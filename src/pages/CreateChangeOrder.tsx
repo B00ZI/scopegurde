@@ -100,14 +100,14 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
 
   return (
     <div className="max-w-5xl mx-auto pt-2 pb-8 animate-in fade-in duration-300">
-      {/* Introduction text */}
-      <div className="mb-8">
-        <p className="font-sans text-sm font-medium text-secondary">Draft scope modifications using AI or manual entry.</p>
-      </div>
+      <PageHeader 
+        title="New Scope Adjustment" 
+        subtitle="Draft scope modifications using AI or manual entry." 
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Data Input (AI and Manual Forms) */}
-        <div className="lg:col-span-8 space-y-8">
+        <div className="lg:col-span-7 space-y-8">
           
           {/* SECTION 1: AI Brain Dump Box */}
           <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-8 shadow-sm">
@@ -124,7 +124,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
             <textarea 
               value={brainDump}
               onChange={(e) => setBrainDump(e.target.value)}
-              className="w-full h-40 bg-surface border border-surface-container-highest rounded-lg p-4 sm:p-6 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none mb-4" 
+              className="w-full h-40 bg-surface border border-surface-container-highest rounded-lg p-4 sm:p-6 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none mb-4" 
               placeholder="e.g., The client wants to add a user dashboard with 3 widget types..."
             />
             {extractionError && (
@@ -139,26 +139,23 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                 className="w-full sm:w-auto bg-primary text-on-primary font-button px-6 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 shadow-sm"
               >
                 {isExtracting ? <span className="animate-spin"><Wand2 className="w-5 h-5" /></span> : <Sparkles className="w-5 h-5" />}
-                AI Generate
-              </button>
-              <span className="hidden sm:inline font-body-sm text-secondary">or</span>
-              <button className="w-full sm:w-auto text-primary font-button px-4 py-2.5 rounded-lg border border-primary hover:bg-primary/5 transition-colors">
-                Fill Manually
+                Extract Details
               </button>
             </div>
           </section>
 
           {/* SECTION 2: Structured Details (Populated by AI or user) */}
-          <section className={`bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-8 shadow-sm transition-opacity ${details.title ? 'opacity-100' : 'opacity-50'}`}>
+          <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-8 shadow-sm">
             <h3 className="font-h3 text-on-surface mb-8 border-b border-surface-container-highest pb-4">Scope Details</h3>
             <div className="space-y-6">
               {/* Scope Title */}
-              <div>
-                <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Scope Title</label>
+                <div>
+                  <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Scope Title</label>
                 <input 
+                  id="scope-title-input"
                   value={details.title}
                   onChange={(e) => setDetails({ ...details, title: e.target.value })}
-                  className="w-full bg-surface border border-surface-container-highest rounded-lg px-4 sm:px-6 py-3 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" 
+                  className="w-full bg-surface border border-surface-container-highest rounded-lg px-4 sm:px-6 py-3 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
                   placeholder="e.g., Additional User Dashboard Features" 
                   type="text"
                 />
@@ -166,11 +163,12 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
               
               {/* Deliverables List */}
               <div>
-                <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Deliverables & Tasks (Bulleted)</label>
+                <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Deliverables & Tasks</label>
+                <p className="font-body-sm text-secondary mb-3">Enter each task on a new line.</p>
                 <textarea 
                   value={details.deliverables}
                   onChange={(e) => setDetails({ ...details, deliverables: e.target.value })}
-                  className="w-full h-32 bg-surface border border-surface-container-highest rounded-lg p-4 sm:p-6 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none" 
+                  className="w-full h-32 bg-surface border border-surface-container-highest rounded-lg p-4 sm:p-6 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none" 
                   placeholder="- Task 1\n- Task 2"
                 />
               </div>
@@ -184,7 +182,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                     <input 
                       value={details.priceAdjustment}
                       onChange={(e) => setDetails({ ...details, priceAdjustment: e.target.value })}
-                      className="w-full bg-surface border border-surface-container-highest rounded-lg pl-8 pr-6 py-3 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" 
+                      className="w-full bg-surface border border-surface-container-highest rounded-lg pl-8 pr-6 py-3 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
                       placeholder="0.00" 
                       type="number"
                     />
@@ -196,7 +194,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                     <input 
                       value={details.extraTimeDays}
                       onChange={(e) => setDetails({ ...details, extraTimeDays: e.target.value })}
-                      className="w-full bg-surface border border-surface-container-highest rounded-lg px-6 py-3 pr-20 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" 
+                      className="w-full bg-surface border border-surface-container-highest rounded-lg px-6 py-3 pr-20 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
                       placeholder="0" 
                       type="number"
                     />
@@ -207,13 +205,38 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
 
               {/* Offer Expiration */}
               <div>
-                <label className="block font-label-caps text-on-surface-variant mb-2 uppercase">Offer Valid Until</label>
+                <label className="block font-label-caps text-on-surface-variant mb-3 uppercase">Offer Valid Until</label>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {[3, 7, 14].map((days) => (
+                    <button
+                      key={days}
+                      onClick={() => {
+                        const d = new Date();
+                        d.setDate(d.getDate() + days);
+                        setDetails({ ...details, validUntil: d.toISOString().split('T')[0] });
+                      }}
+                      className="px-3 py-1.5 text-[11px] font-black tracking-wider uppercase rounded-full bg-surface-container-low border border-surface-container-highest hover:bg-surface-container text-secondary hover:text-on-surface transition-colors"
+                    >
+                      +{days} Days
+                    </button>
+                  ))}
+                  <button
+                      onClick={() => {
+                        const d = new Date();
+                        d.setMonth(d.getMonth() + 1);
+                        setDetails({ ...details, validUntil: d.toISOString().split('T')[0] });
+                      }}
+                      className="px-3 py-1.5 text-[11px] font-black tracking-wider uppercase rounded-full bg-surface-container-low border border-surface-container-highest hover:bg-surface-container text-secondary hover:text-on-surface transition-colors"
+                    >
+                      +1 Month
+                    </button>
+                </div>
                 <input 
                   type="date"
                   value={details.validUntil}
                   min={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setDetails({ ...details, validUntil: e.target.value })}
-                  className="w-full bg-surface border border-surface-container-highest rounded-lg px-6 py-3 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" 
+                  className="w-full bg-surface border border-surface-container-highest rounded-lg px-6 py-3 font-body-base text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
                 />
                 <p className="font-body-sm text-secondary mt-2">Sets an expiration date to create urgency and trigger automatic follow-ups.</p>
               </div>
@@ -222,7 +245,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
         </div>
 
         {/* Right Column: Settings & Final Actions */}
-        <div className="lg:col-span-4 space-y-8">
+        <div className="lg:col-span-5 space-y-8">
           
           {/* SECTION 3: Context and Client Routing */}
           <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-8 shadow-sm">
@@ -325,13 +348,18 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                         tone === t ? 'border-primary bg-primary/5' : 'border-surface-container-highest'
                       }`}
                     >
-                      <input 
-                        checked={tone === t}
-                        onChange={() => setTone(t)}
-                        className="text-primary focus:ring-primary" 
-                        name="tone" 
-                        type="radio" 
-                      />
+                      <div className="relative flex items-center justify-center">
+                        <input 
+                          checked={tone === t}
+                          onChange={() => setTone(t)}
+                          className="peer sr-only" 
+                          name="tone" 
+                          type="radio" 
+                        />
+                        <div className="w-5 h-5 rounded-full border-2 border-surface-container-highest peer-checked:border-primary peer-checked:bg-primary transition-all flex items-center justify-center">
+                          {tone === t && <div className="w-2 h-2 rounded-full bg-on-primary animate-in zoom-in" />}
+                        </div>
+                      </div>
                       <span className="ml-3 font-body-base text-on-surface capitalize">{t === 'friendly' ? 'Friendly & Collaborative' : t === 'neutral' ? 'Neutral & Direct' : 'Firm & Contractual'}</span>
                     </label>
                   ))}
@@ -341,29 +369,30 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
           </section>
 
           {/* SECTION 4: Submission State */}
-          <section className="bg-surface-container-highest border border-surface-container-highest rounded-xl p-5 sm:p-8 shadow-sm">
-            <p className="font-body-sm text-secondary mb-6 text-center">Complete all required fields to generate the formal document.</p>
+          <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-6 shadow-sm overflow-hidden">
+            <div className="bg-primary/5 -mx-6 -mt-6 p-6 border-b border-surface-container-highest mb-6 flex flex-col items-center text-center">
+               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                 <ArrowRight className="text-primary w-6 h-6" />
+               </div>
+               <h3 className="font-h3 text-on-surface mb-1">Ready to Finalize</h3>
+               <p className="font-body-sm text-secondary">Complete all required fields to preview the scope and outbound message.</p>
+            </div>
             <div className="space-y-4">
               {/* Submit Button -> Fires callback to App.tsx to move to next Step */}
               <button 
                 onClick={() => onGenerate(details, tone)}
-                className="w-full bg-primary text-on-primary font-button px-4 py-3 rounded-lg shadow-sm hover:opacity-90 transition-colors flex justify-center items-center gap-2 active:scale-[0.98]"
+                className="w-full bg-primary text-on-primary font-button px-4 py-3.5 rounded-lg shadow-sm hover:opacity-90 transition-colors flex justify-center items-center gap-2 active:scale-[0.98]"
               >
-                Generate & Preview
+                Preview Scope
                 <ArrowRight className="w-5 h-5" />
               </button>
               
-              <div className="grid grid-cols-2 gap-4">
-                <button 
-                  onClick={onCancel}
-                  className="bg-surface-container-lowest border border-surface-container-highest text-on-surface font-button px-4 py-2.5 rounded-lg hover:bg-surface-container transition-colors"
-                >
-                  Cancel
-                </button>
-                <button className="bg-surface-container-lowest border border-surface-container-highest text-on-surface font-button px-4 py-2.5 rounded-lg hover:bg-surface-container transition-colors">
-                  Draft
-                </button>
-              </div>
+              <button 
+                onClick={onCancel}
+                className="w-full bg-surface-container-low border border-surface-container-highest text-on-surface font-button px-4 py-2.5 rounded-lg hover:bg-surface-container transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           </section>
         </div>

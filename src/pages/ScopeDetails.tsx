@@ -245,7 +245,7 @@ I'm reaching out regarding the ${scope.description}. As this falls outside our o
 
       <div className="space-y-8">
         {/* SECTION 1: OPERATIONS - Status & Settlement */}
-        <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl shadow-sm">
           <div className="p-6 sm:p-8">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">

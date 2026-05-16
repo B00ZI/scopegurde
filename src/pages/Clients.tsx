@@ -250,7 +250,7 @@ export function ClientsPage({ onAddClient, onViewClient, onEditClient, onDeleteC
       </div>
 
       {/* SECTION 2: Data Display */}
-      <div className="bg-surface-container-lowest border border-surface-container-highest rounded-lg overflow-hidden shadow-sm">
+      <div className="bg-surface-container-lowest border border-surface-container-highest rounded-lg shadow-sm">
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
