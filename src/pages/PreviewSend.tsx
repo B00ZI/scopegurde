@@ -1,0 +1,216 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Copy, Send, Loader2, Mail, MessageCircle, ChevronUp, Save, FileText } from 'lucide-react';
+
+interface PreviewSendProps {
+  details: any;
+  tone: string;
+  onBack: () => void;
+  onPreviewPortal: () => void;
+}
+
+/**
+ * MESSAGE PREVIEW & SEND PAGE (STEP 2)
+ * 
+ * Purpose: This component acts as the "Staging" area before a scope change 
+ * is finalized and sent to a client.
+ * 
+ * High-Level Flow:
+ * 1. MAPPING: AI transforms the structured JSON project data into human-readable copy.
+ * 2. REVIEW: Admin edits or simply verifies the drafted message.
+ * 3. DELIVERY: Message is either copied to clipboard (WhatsApp/Slack) or 
+ *    simulated as sent via Email.
+ */
+export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: PreviewSendProps) {
+  // --- STATE MANAGEMENT ---
+  const [message, setMessage] = useState('');
+  const [isGenerating, setIsGenerating] = useState(true);
+  const [isSendMenuOpen, setIsSendMenuOpen] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // --- INITIALIZATION: DYNAMIC MESSAGE GENERATION ---
+  useEffect(() => {
+    function generateDynamicMessage() {
+      const portalLink = "https://scopeguard.app/approval-portal/SC-4821";
+      const deadlineStr = details.validUntil ? `by ${details.validUntil}` : "as soon as possible";
+      
+      if (tone === 'friendly') {
+        return `Hi there,\n\nWe've prepared an update regarding "${details.title}".\n\nPlease review and approve the details at your earliest convenience, ideally ${deadlineStr}, so we can keep things moving smoothly along.\n\nYou can access your secure portal right here to see the full details:\n${portalLink}\n\nLet me know if you have any questions!\n\nBest,\nThe ScopeGuard Team`;
+      } else if (tone === 'firm') {
+        return `Attention required:\n\nA new scope adjustment for "${details.title}" requires your approval. \n\nTo avoid any delays in the project schedule, this must be reviewed and approved ${deadlineStr}.\n\nPlease review the complete details and submit your approval via your secure client portal:\n${portalLink}\n\nThank you,\nScopeGuard Operations`;
+      } else {
+        // neutral
+        return `Hello,\n\nA scope adjustment for "${details.title}" is ready for your review.\n\nPlease follow the link below to review and approve the details ${deadlineStr}.\n\nSecure Client Portal:\n${portalLink}\n\nRegards,\nThe ScopeGuard Team`;
+      }
+    }
+    
+    setMessage(generateDynamicMessage());
+    setIsGenerating(false);
+  }, [details, tone]);
+
+  // --- REUSABLE LOGIC: CLICK OUTSIDE ---
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsSendMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // --- ACTION HANDLERS ---
+  const handleCopy = () => {
+    navigator.clipboard.writeText(message);
+    setCopyStatus('Copied!');
+    setTimeout(() => setCopyStatus(null), 2000);
+  };
+
+  /**
+   * INTERACTIVE LINK PARSER
+   * Scans text for URLs and makes them clickable, specifically mapping 
+   * portal links to our React state transition (onPreviewPortal).
+   */
+  const renderMessageWithLinks = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.split(urlRegex).map((part, i) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a 
+            key={i} 
+            href={part} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-primary font-bold underline hover:text-primary/80 transition-colors break-all"
+            onClick={(e) => {
+              e.preventDefault();
+              if (part.includes('approval-portal')) onPreviewPortal();
+            }}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
+  return (
+    <div className="flex flex-col">
+      <div className="flex-1 p-4 sm:p-8 max-w-5xl mx-auto w-full flex flex-col gap-6 sm:gap-10">
+        {/* Navigation / Header */}
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={onBack}
+            className="p-2 hover:bg-surface-container rounded-full transition-colors"
+            title="Back to Edit"
+          >
+            <ArrowLeft className="w-5 h-5 text-secondary" />
+          </button>
+          <div className="flex-1 min-w-0">
+             <h2 className="font-h2 text-on-surface truncate">Final Message Preview</h2>
+             <p className="font-body-sm text-on-surface-variant line-clamp-1">Review the surcharge notification below.</p>
+          </div>
+          <span className="font-label-caps text-on-surface-variant px-3 py-1 bg-surface-container rounded whitespace-nowrap">DRAFT</span>
+        </div>
+
+        {/* SECTION 1: Generated Preview Box */}
+        <section className="flex flex-col gap-2 w-full">
+          <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-10 shadow-sm min-h-[300px] sm:min-h-[400px] flex flex-col relative group">
+            {isGenerating ? (
+              // Loading State while Gemini is working
+              <div className="flex-1 flex flex-col items-center justify-center text-secondary gap-4">
+                <Loader2 className="w-8 h-8 animate-spin" />
+                <p className="font-body-base">AI is drafting your message...</p>
+              </div>
+            ) : (
+              // Success State
+              <>
+                <div className="font-body-base text-on-surface space-y-4 leading-relaxed whitespace-pre-wrap font-sans">
+                  {renderMessageWithLinks(message)}
+                </div>
+                {!isGenerating && (
+                  // Quick hover action for clipboard
+                  <button 
+                    onClick={handleCopy}
+                    className="absolute top-4 right-4 p-2.5 rounded-lg bg-surface-container-highest border border-surface-container-highest text-on-surface hover:text-primary transition-all opacity-0 group-hover:opacity-100 flex items-center gap-2 shadow-sm"
+                  >
+                    {copyStatus ? <span className="text-xs font-bold text-primary">{copyStatus}</span> : <Copy className="w-4 h-4" />}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* SECTION 2: Action Footer (Save, Send, Routing options) */}
+        <section className="mt-auto pt-10 pb-8 w-full flex flex-col sm:flex-row justify-end gap-4">
+          <button 
+            className="px-8 py-3 bg-surface-container-low border border-surface-container-highest text-on-surface hover:bg-surface-container-high rounded-lg font-button transition-all flex items-center justify-center gap-2 w-full sm:w-auto shadow-sm active:scale-95"
+          >
+            <Save className="w-4 h-4 text-secondary" />
+            Save Draft
+          </button>
+          
+          <div className="relative w-full sm:w-auto" ref={menuRef}>
+            <button 
+              onClick={() => setIsSendMenuOpen(!isSendMenuOpen)}
+              className="px-8 py-3 bg-primary text-on-primary hover:opacity-90 rounded-lg font-button transition-all flex items-center justify-center gap-2 w-full sm:w-auto shadow-md active:scale-95"
+            >
+              <Send className="w-4 h-4" />
+              Send Now
+              <ChevronUp className={`w-4 h-4 transition-transform duration-200 ${isSendMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Delivery Methods Dropdown */}
+            {isSendMenuOpen && (
+              <div className="absolute bottom-full right-0 mb-3 w-64 bg-surface-container-lowest border border-surface-container-highest rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="p-3 border-b border-surface-container-highest bg-surface-container-low">
+                  <span className="font-label-caps text-secondary text-[10px]">Select Delivery Method</span>
+                </div>
+                <div className="flex flex-col p-1">
+                  <button className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/5 text-on-surface hover:text-primary transition-all text-left">
+                    <Mail className="w-4 h-4" />
+                    <div className="flex flex-col">
+                      <span className="font-sans text-[13px] font-semibold">Direct Email</span>
+                      <span className="text-[10px] text-secondary">Send as an official notice</span>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={handleCopy}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/5 text-on-surface hover:text-primary transition-all text-left"
+                  >
+                    <Copy className="w-4 h-4" />
+                    <div className="flex flex-col">
+                      <span className="font-sans text-[13px] font-semibold">Copy to Clipboard</span>
+                      <span className="text-[10px] text-secondary">Ready for WhatsApp/Slack</span>
+                    </div>
+                  </button>
+                  <button className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/5 text-on-surface hover:text-primary transition-all text-left">
+                    <MessageCircle className="w-4 h-4" />
+                    <div className="flex flex-col">
+                      <span className="font-sans text-[13px] font-semibold">WhatsApp Business</span>
+                      <span className="text-[10px] text-secondary">Share directly via mobile</span>
+                    </div>
+                  </button>
+                  <div className="h-px bg-surface-container-highest my-1 mx-2" />
+                  {/* Important link for jumping to the Public Approval screen state */}
+                  <button 
+                    onClick={onPreviewPortal}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/5 text-primary transition-all text-left"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <div className="flex flex-col">
+                      <span className="font-sans text-[13px] font-bold">Preview Approve Page</span>
+                      <span className="text-[10px] text-primary/60">See what the client sees</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
