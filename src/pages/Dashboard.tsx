@@ -1,159 +1,139 @@
 import React, { useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { TrendingUp, FileText, AlertCircle, ArrowUpRight, Search, Filter, Download, CheckCircle, Clock, ArrowDown, ArrowUp } from 'lucide-react';
+import { TrendingUp, Briefcase, AlertCircle, Clock, Search, Filter, Download, Plus, ArrowDown, ArrowUp } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 import { SearchableDropdown } from '../components/SearchableDropdown';
-import { MOCK_CLIENTS, MOCK_SCOPES } from '../lib/mockData';
 import { StatCard } from '../components/StatCard';
-import { StatusBadge } from '../components/StatusBadge';
+import { MOCK_CLIENTS, MOCK_PROJECTS } from '../lib/mockData';
+import { Project } from '../types';
 
-/**
- * DASHBOARD PAGE
- * 
- * Purpose: Provides a high-level overview of business health and active work items.
- * 
- * Features:
- * - Metric cards with quick-filter shortcuts
- * - Searchable data table for active scopes
- * - Sortable columns (Description, Client, Amount, Status, Time)
- * - "Quick Complete" action to finalize scopes directly from the list
- */
-export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => void }) {
+const DAY_MS = 1000 * 60 * 60 * 24;
+
+function formatCurrency(value: number) {
+  return `$${value.toLocaleString('en-US')}`;
+}
+
+function getDaysUntil(deadline: string) {
+  const now = new Date();
+  const target = new Date(`${deadline}T00:00:00`);
+  return Math.round((target.getTime() - now.getTime()) / DAY_MS);
+}
+
+function formatDeadline(deadline: string) {
+  return new Date(`${deadline}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+export function DashboardPage({ onNewProject }: { onNewProject: () => void }) {
+  const [projects] = useState<Project[]>(MOCK_PROJECTS);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
-  
-  // Advanced Filter State (Filters the activeScopes list)
-  const [filters, setFilters] = useState({
-    status: '',
-    client: '',
-    urgency: ''
-  });
-  
-  // Primary Data State
-  const [activeScopes, setActiveScopes] = useState(MOCK_SCOPES);
-  const [completingIds, setCompletingIds] = useState<Set<string>>(new Set());
-  const [completedScope, setCompletedScope] = useState<any | null>(null);
-  const [snackbarTimeout, setSnackbarTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [filters, setFilters] = useState({ client: '', deadline: '', approvals: '' });
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'deadline', direction: 'asc' });
 
-  // --- STATS CONFIGURATION ---
-  const stats: any[] = [
-    { 
-      label: 'Monthly Revenue', 
-      value: '$242,500', 
-      trend: '+12.5%', 
-      icon: TrendingUp 
-    },
-    { 
-      label: 'Active Scopes', 
-      value: '142', 
-      trend: '+12', 
-      icon: FileText,
+  const clientName = (clientId: string) => MOCK_CLIENTS.find((c) => c.id === clientId)?.name ?? 'Unknown';
+
+  const activeRevenue = useMemo(
+    () => projects.reduce((sum, p) => sum + p.basePrice + p.outOfScopeAdded, 0),
+    [projects]
+  );
+  const oosTotal = useMemo(() => projects.reduce((sum, p) => sum + p.outOfScopeAdded, 0), [projects]);
+  const expiringCount = useMemo(
+    () => projects.filter((p) => {
+      const d = getDaysUntil(p.deadline);
+      return d >= 0 && d <= 7;
+    }).length,
+    [projects]
+  );
+  const pendingApprovals = useMemo(
+    () => projects.reduce((sum, p) => sum + p.pendingOutOfScopeRequests, 0),
+    [projects]
+  );
+
+  const stats = [
+    {
+      label: 'Active Projects',
+      value: String(projects.length),
+      icon: Briefcase,
       onClick: () => {
-        setFilters({ status: '', client: '', urgency: '' });
+        setFilters({ client: '', deadline: '', approvals: '' });
         setSearchTerm('');
-      }
+      },
     },
-    { 
-      label: 'Expiring Soon', 
-      value: '3', 
-      trend: 'Next 7d', 
-      icon: Clock, 
+    {
+      label: 'Active Revenue',
+      value: formatCurrency(activeRevenue),
+      trend: `+$${(oosTotal / 1000).toFixed(1)}K OOS`,
+      icon: TrendingUp,
+    },
+    {
+      label: 'Expiring Soon',
+      value: String(expiringCount),
+      trend: 'Next 7d',
+      icon: Clock,
       color: 'text-error',
       onClick: () => {
-        setFilters(prev => ({ ...prev, urgency: '7' }));
+        setFilters((prev) => ({ ...prev, deadline: '7' }));
         setIsFilterOpen(true);
-      }
+      },
     },
-    { 
-      label: 'Pending Approvals', 
-      value: '8', 
-      trend: '-1', 
+    {
+      label: 'Pending OOS Approvals',
+      value: String(pendingApprovals),
+      trend: 'Needs review',
       icon: AlertCircle,
       onClick: () => {
-        setFilters(prev => ({ ...prev, status: 'Draft' }));
+        setFilters((prev) => ({ ...prev, approvals: 'pending' }));
         setIsFilterOpen(true);
-      }
+      },
     },
   ];
 
-  // --- TABLE LOGIC (Filtering & Sorting) ---
-
-  const handleQuickComplete = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    const scopeToComplete = activeScopes.find(s => s.id === id);
-    if (!scopeToComplete) return;
-
-    setCompletingIds(prev => new Set(prev).add(id));
-
-    setTimeout(() => {
-      setActiveScopes(prev => prev.filter(row => row.id !== id));
-      setCompletingIds(prev => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-
-      setCompletedScope(scopeToComplete);
-      if (snackbarTimeout) clearTimeout(snackbarTimeout);
-      const timeoutId = setTimeout(() => setCompletedScope(null), 5000);
-      setSnackbarTimeout(timeoutId);
-    }, 300);
-  };
-
-  const handleUndo = () => {
-    if (!completedScope) return;
-    
-    setActiveScopes(prev => {
-      return [...prev, completedScope].sort((a, b) => b.id.localeCompare(a.id));
-    });
-    
-    setCompletedScope(null);
-    if (snackbarTimeout) clearTimeout(snackbarTimeout);
-  };
-
-  const filteredScopes = activeScopes.filter(scope => {
-    const matchesSearch = (scope.client?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          scope.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          scope.id?.toLowerCase().includes(searchTerm.toLowerCase())) || false;
+  const filteredProjects = projects.filter((p) => {
+    const client = clientName(p.clientId);
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          p.id.toLowerCase().includes(searchTerm.toLowerCase());
     if (!matchesSearch) return false;
-    
-    if (filters.status && scope.status !== filters.status) return false;
-    if (filters.client && scope.client !== filters.client) return false;
-    if (filters.urgency && scope.validUntil) {
-      const validUntil = new Date(scope.validUntil).getTime();
-      const now = new Date().getTime();
-      const diffDays = (validUntil - now) / (1000 * 3600 * 24);
-      if (diffDays > parseInt(filters.urgency, 10)) return false;
-    } else if (filters.urgency && !scope.validUntil) {
-      return false; // If searching for urgency and no validUntil present
+
+    if (filters.client && client !== filters.client) return false;
+
+    if (filters.deadline) {
+      const days = getDaysUntil(p.deadline);
+      if (filters.deadline === 'overdue') {
+        if (days >= 0) return false;
+      } else {
+        if (days < 0 || days > parseInt(filters.deadline, 10)) return false;
+      }
     }
-    
+
+    if (filters.approvals === 'pending' && p.pendingOutOfScopeRequests === 0) return false;
+
     return true;
   });
 
-  const sortedScopes = useMemo(() => {
-    let sortableItems = [...filteredScopes];
-    if (sortConfig !== null) {
-      sortableItems.sort((a, b) => {
-        let aVal: any = a[sortConfig.key as keyof typeof a];
-        let bVal: any = b[sortConfig.key as keyof typeof b];
+  const sortedProjects = useMemo(() => {
+    const items = [...filteredProjects];
+    if (sortConfig) {
+      items.sort((a, b) => {
+        let aVal: any;
+        let bVal: any;
 
-        // Custom comparisons
-        if (sortConfig.key === 'amount') {
-          aVal = parseFloat(aVal.replace(/[^0-9.-]+/g, ""));
-          bVal = parseFloat(bVal.replace(/[^0-9.-]+/g, ""));
-        } else if (sortConfig.key === 'time') {
-          // Mock time sorting logic (very basic since we use string like '2h ago')
-          // In a real app we'd use ISO timestamps
-          const getMinutes = (t: any) => {
-            if (!t || typeof t !== 'string') return 0;
-            if (t.includes('h ago')) return parseInt(t) * 60;
-            if (t.includes('Yesterday')) return 24 * 60;
-            return 0;
-          };
-          aVal = getMinutes(aVal);
-          bVal = getMinutes(bVal);
+        switch (sortConfig.key) {
+          case 'client':
+            aVal = clientName(a.clientId).toLowerCase();
+            bVal = clientName(b.clientId).toLowerCase();
+            break;
+          case 'name':
+            aVal = a.name.toLowerCase();
+            bVal = b.name.toLowerCase();
+            break;
+          case 'deadline':
+            aVal = new Date(`${a.deadline}T00:00:00`).getTime();
+            bVal = new Date(`${b.deadline}T00:00:00`).getTime();
+            break;
+          default:
+            aVal = a[sortConfig.key as keyof Project];
+            bVal = b[sortConfig.key as keyof Project];
         }
 
         if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -161,10 +141,10 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
         return 0;
       });
     }
-    return sortableItems;
-  }, [filteredScopes, sortConfig]);
+    return items;
+  }, [filteredProjects, sortConfig]);
 
-  const activeFiltersCount = (filters.status ? 1 : 0) + (filters.client ? 1 : 0) + (filters.urgency ? 1 : 0);
+  const activeFiltersCount = (filters.client ? 1 : 0) + (filters.deadline ? 1 : 0) + (filters.approvals ? 1 : 0);
 
   const requestSort = (key: string) => {
     let direction: 'asc' | 'desc' | null = 'asc';
@@ -172,7 +152,7 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
       if (sortConfig.direction === 'asc') direction = 'desc';
       else direction = null;
     }
-    
+
     if (direction) {
       setSortConfig({ key, direction });
     } else {
@@ -182,24 +162,60 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
 
   const getSortIcon = (key: string) => {
     if (!sortConfig || sortConfig.key !== key) return <ArrowDown className="w-3 h-3 opacity-0 group-hover:opacity-30 ml-1 transition-opacity" />;
-    return sortConfig.direction === 'asc' 
+    return sortConfig.direction === 'asc'
       ? <ArrowUp className="w-3 h-3 opacity-100 ml-1 text-primary" />
       : <ArrowDown className="w-3 h-3 opacity-100 ml-1 text-primary" />;
   };
 
+  const renderDeadline = (deadline: string) => {
+    const days = getDaysUntil(deadline);
+    const overdue = days < 0;
+    return (
+      <div>
+        <p className="font-medium text-on-surface">{formatDeadline(deadline)}</p>
+        <p className={`text-xs ${overdue ? 'text-error' : 'text-secondary'}`}>
+          {overdue ? 'Overdue' : days === 0 ? 'Today' : `in ${days}d`}
+        </p>
+      </div>
+    );
+  };
+
+  const renderProgress = (progress: number) => (
+    <div className="flex items-center gap-2">
+      <div className="w-20 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+        <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+      </div>
+      <span className="text-xs text-secondary">{progress}%</span>
+    </div>
+  );
+
+  const renderAdded = (added: number) =>
+    added > 0
+      ? <span className="font-medium text-[#065F46] dark:text-[#10B981]">+{formatCurrency(added)}</span>
+      : <span className="text-secondary">—</span>;
+
   return (
     <div className="max-w-7xl mx-auto pt-2 pb-8">
-      <PageHeader 
-        title="Dashboard" 
-        subtitle="Overview of your logistics performance and scopes."
+      <PageHeader
+        title="Dashboard"
+        subtitle="Overview of your active projects and contract performance."
+        actions={
+          <button
+            onClick={onNewProject}
+            className="flex items-center gap-2 bg-primary text-on-primary font-button px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg hover:opacity-90 transition-all shadow-sm active:scale-95 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">New Project</span>
+            <span className="sm:hidden">New</span>
+          </button>
+        }
       />
 
-      {/* Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
         {stats.map((stat) => {
           const { label, value, trend, icon, color, onClick } = stat;
           return (
-            <StatCard 
+            <StatCard
               key={label}
               label={label}
               value={value}
@@ -214,36 +230,27 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
 
       <div className="flex flex-col gap-8">
         <div>
-          {/* Header & Global View CTA */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <h3 className="font-h3 text-on-surface">Active Scopes</h3>
-            <div className="flex items-center gap-4">
-               <button className="text-primary font-button flex items-center gap-1 hover:underline text-sm sm:text-base">
-                 View All <ArrowUpRight className="w-4 h-4" />
-               </button>
-            </div>
-          </div>
+          <h3 className="font-h3 text-on-surface mb-6">Active Projects</h3>
 
-          {/* Utility Bar: Search & Global Actions */}
           <div className="flex flex-col gap-4 mb-8">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-secondary" />
                 <input
                   type="text"
-                  placeholder="Search activity..."
+                  placeholder="Search projects or clients..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-surface-container-lowest border border-surface-container-highest rounded-xl pl-10 sm:pl-11 pr-4 py-3 h-[44px] sm:h-[48px] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow text-sm sm:text-base text-on-surface placeholder:text-secondary shadow-sm"
                 />
               </div>
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
                   className={`flex-1 sm:flex-none relative px-4 h-[44px] sm:h-[48px] rounded-xl border font-button flex items-center justify-center gap-2 transition-colors shadow-sm ${
-                    isFilterOpen || activeFiltersCount > 0 
-                    ? 'bg-primary/5 text-primary border-primary/20 hover:bg-primary/10' 
-                    : 'bg-surface-container-lowest border-surface-container-highest text-secondary hover:bg-surface-container hover:text-on-surface'
+                    isFilterOpen || activeFiltersCount > 0
+                      ? 'bg-primary/5 text-primary border-primary/20 hover:bg-primary/10'
+                      : 'bg-surface-container-lowest border-surface-container-highest text-secondary hover:bg-surface-container hover:text-on-surface'
                   }`}
                 >
                   <Filter className="w-4 sm:w-5 h-4 sm:h-5" />
@@ -260,7 +267,6 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
               </div>
             </div>
 
-            {/* Collapsible Filter UI */}
             <AnimatePresence>
               {isFilterOpen && (
                 <motion.div
@@ -271,57 +277,48 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
                 >
                   <div className="p-5 bg-surface-container-lowest border border-surface-container-highest rounded-xl shadow-sm mb-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-button text-on-surface">Filter Active Scopes</h4>
-                      <button 
-                        onClick={() => setFilters({ status: '', client: '', urgency: '' })}
+                      <h4 className="font-button text-on-surface">Filter Projects</h4>
+                      <button
+                        onClick={() => setFilters({ client: '', deadline: '', approvals: '' })}
                         className="text-sm font-button text-secondary hover:text-primary transition-colors"
                       >
                         Clear All
                       </button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                      {/* Client Filter */}
                       <SearchableDropdown
                         label="Client"
                         value={filters.client}
-                        onChange={(v) => setFilters(prev => ({ ...prev, client: v }))}
+                        onChange={(v) => setFilters((prev) => ({ ...prev, client: v }))}
                         options={[
                           { label: 'All Clients', value: '' },
-                          ...MOCK_CLIENTS.map(c => ({ label: c.name, value: c.name }))
+                          ...MOCK_CLIENTS.map((c) => ({ label: c.name, value: c.name })),
                         ]}
                       />
 
-                      {/* Status Filter */}
                       <SearchableDropdown
-                        label="Status"
-                        value={filters.status}
+                        label="Deadline"
+                        value={filters.deadline}
                         hideSearch
-                        onChange={(v) => setFilters(prev => ({ ...prev, status: v }))}
+                        onChange={(v) => setFilters((prev) => ({ ...prev, deadline: v }))}
                         options={[
-                          { label: 'All Statuses', value: '' },
-                          { label: 'Draft', value: 'Draft' },
-                          { label: 'Sent', value: 'Sent' },
-                          { label: 'Approved', value: 'Approved' },
-                          { label: 'Paid', value: 'Paid' },
-                          { label: 'Expired', value: 'Expired' },
+                          { label: 'Any Deadline', value: '' },
+                          { label: 'Next 7 days', value: '7' },
+                          { label: 'Next 30 days', value: '30' },
+                          { label: 'Overdue', value: 'overdue' },
                         ]}
                       />
 
-                      {/* Urgency Filter */}
-                      <div className="flex flex-col gap-2">
-                        <label className="text-xs font-semibold text-secondary uppercase tracking-wider">Urgency (Days to Expire)</label>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-secondary">Expiring in</span>
-                          <input 
-                            type="number"
-                            placeholder="e.g. 3"
-                            value={filters.urgency}
-                            onChange={(e) => setFilters(prev => ({ ...prev, urgency: e.target.value }))}
-                            className="bg-surface-container border border-surface-container-highest rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 w-24"
-                          />
-                          <span className="text-sm text-secondary">days or less</span>
-                        </div>
-                      </div>
+                      <SearchableDropdown
+                        label="Out-of-Scope Approvals"
+                        value={filters.approvals}
+                        hideSearch
+                        onChange={(v) => setFilters((prev) => ({ ...prev, approvals: v }))}
+                        options={[
+                          { label: 'Any', value: '' },
+                          { label: 'Pending only', value: 'pending' },
+                        ]}
+                      />
                     </div>
                   </div>
                 </motion.div>
@@ -329,185 +326,133 @@ export function DashboardPage({ onViewScope }: { onViewScope?: (scope: any) => v
             </AnimatePresence>
           </div>
 
-          {/* Data Display */}
           <div className="bg-surface-container-lowest border border-surface-container-highest rounded-lg overflow-hidden shadow-sm">
-            {/* Desktop Table View */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-surface-container-low border-b border-surface-container-highest">
-                    <th 
-                      onClick={() => requestSort('description')}
+                    <th
+                      onClick={() => requestSort('name')}
                       className="py-4 px-6 font-label-caps text-secondary uppercase cursor-pointer hover:text-on-surface transition-colors select-none group"
                     >
-                      <div className="flex items-center">Scope {getSortIcon('description')}</div>
+                      <div className="flex items-center">Project {getSortIcon('name')}</div>
                     </th>
-                    <th 
+                    <th
                       onClick={() => requestSort('client')}
                       className="py-4 px-6 font-label-caps text-secondary uppercase cursor-pointer hover:text-on-surface transition-colors select-none group"
                     >
                       <div className="flex items-center">Client {getSortIcon('client')}</div>
                     </th>
-                    <th 
-                      onClick={() => requestSort('amount')}
+                    <th
+                      onClick={() => requestSort('basePrice')}
                       className="py-4 px-6 font-label-caps text-secondary uppercase cursor-pointer hover:text-on-surface transition-colors select-none group"
                     >
-                      <div className="flex items-center">Amount {getSortIcon('amount')}</div>
+                      <div className="flex items-center">Base Price {getSortIcon('basePrice')}</div>
                     </th>
-                    <th 
-                      onClick={() => requestSort('status')}
+                    <th
+                      onClick={() => requestSort('outOfScopeAdded')}
                       className="py-4 px-6 font-label-caps text-secondary uppercase cursor-pointer hover:text-on-surface transition-colors select-none group"
                     >
-                      <div className="flex items-center">Status {getSortIcon('status')}</div>
+                      <div className="flex items-center">Added (OOS) {getSortIcon('outOfScopeAdded')}</div>
                     </th>
-                    <th 
-                      onClick={() => requestSort('time')}
+                    <th
+                      onClick={() => requestSort('progress')}
                       className="py-4 px-6 font-label-caps text-secondary uppercase cursor-pointer hover:text-on-surface transition-colors select-none group"
                     >
-                      <div className="flex items-center">Updated At {getSortIcon('time')}</div>
+                      <div className="flex items-center">Progress {getSortIcon('progress')}</div>
                     </th>
-                    <th className="py-4 px-4"></th>
+                    <th
+                      onClick={() => requestSort('deadline')}
+                      className="py-4 px-6 font-label-caps text-secondary uppercase cursor-pointer hover:text-on-surface transition-colors select-none group"
+                    >
+                      <div className="flex items-center">Deadline {getSortIcon('deadline')}</div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="font-body-sm relative">
                   <AnimatePresence>
-                    {sortedScopes.map((row) => {
-                      const isCompleting = completingIds.has(row.id);
-                      return (
-                        <motion.tr 
-                          key={row.id} 
-                          layout
-                          initial={{ opacity: 1, backgroundColor: 'transparent' }}
-                          animate={isCompleting ? { 
-                            backgroundColor: 'rgba(6, 95, 70, 0.1)', 
-                            opacity: 0,
-                            x: 30
-                          } : { 
-                            backgroundColor: 'transparent',
-                            opacity: 1,
-                            x: 0
-                          }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: isCompleting ? 0.3 : 0.2 }}
-                          onClick={() => !isCompleting && onViewScope && onViewScope(row)}
-                          className={`border-b border-surface-container-highest hover:bg-surface transition-colors group cursor-pointer ${isCompleting ? 'pointer-events-none' : ''}`}
-                        >
-                          <td className="py-4 px-6">
-                            <p className="font-medium text-on-surface">{row.description}</p>
-                            <p className="text-xs text-secondary">#{row.id}</p>
-                          </td>
-                          <td className="py-4 px-6 text-on-surface">{row.client}</td>
-                          <td className="py-4 px-6 font-medium text-on-surface">{row.amount}</td>
-                          <td className="py-4 px-6">
-                            <StatusBadge status={row.status as any} />
-                          </td>
-                          <td className="py-4 px-6 whitespace-nowrap text-secondary">{row.time}</td>
-                          <td className="py-4 px-4 text-right w-16">
-                            {(row.status === 'Paid' || row.status === 'Approved') && !isCompleting && (
-                              <button
-                                onClick={(e) => handleQuickComplete(e, row.id)}
-                                className="p-2 text-white bg-[#065F46] rounded-full hover:bg-[#047857] hover:scale-110 transition-all shadow-md opacity-0 group-hover:opacity-100"
-                                title="Mark as Completed"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                              </button>
-                            )}
-                          </td>
-                        </motion.tr>
-                      );
-                    })}
+                    {sortedProjects.map((row) => (
+                      <motion.tr
+                        key={row.id}
+                        layout
+                        initial={{ opacity: 1 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="border-b border-surface-container-highest hover:bg-surface transition-colors cursor-default group"
+                      >
+                        <td className="py-4 px-6">
+                          <p className="font-medium text-on-surface">{row.name}</p>
+                          <p className="text-xs text-secondary">#{row.id}</p>
+                        </td>
+                        <td className="py-4 px-6 text-on-surface">{clientName(row.clientId)}</td>
+                        <td className="py-4 px-6 font-medium text-on-surface">{formatCurrency(row.basePrice)}</td>
+                        <td className="py-4 px-6">{renderAdded(row.outOfScopeAdded)}</td>
+                        <td className="py-4 px-6">{renderProgress(row.progress)}</td>
+                        <td className="py-4 px-6 whitespace-nowrap">{renderDeadline(row.deadline)}</td>
+                      </motion.tr>
+                    ))}
                   </AnimatePresence>
                 </tbody>
               </table>
             </div>
 
-            {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-surface-container-highest">
               <AnimatePresence>
-                {sortedScopes.map((row) => {
-                  const isCompleting = completingIds.has(row.id);
-                  return (
-                    <motion.div 
-                      key={row.id} 
-                      layout
-                      initial={{ opacity: 1 }}
-                      animate={isCompleting ? { 
-                        backgroundColor: 'rgba(6, 95, 70, 0.1)', 
-                        opacity: 0,
-                        x: 30
-                      } : { 
-                        opacity: 1,
-                        x: 0
-                      }}
-                      exit={{ opacity: 0 }}
-                      onClick={() => !isCompleting && onViewScope && onViewScope(row)}
-                      className={`p-4 active:bg-surface-container transition-colors ${isCompleting ? 'pointer-events-none' : ''}`}
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <p className="font-bold text-on-surface leading-tight">{row.description}</p>
-                          <p className="text-[10px] text-secondary uppercase font-bold tracking-wider mt-1">{row.client}</p>
-                        </div>
-                        <StatusBadge status={row.status as any} size="sm" />
+                {sortedProjects.map((row) => (
+                  <motion.div
+                    key={row.id}
+                    layout
+                    initial={{ opacity: 1 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="p-4 active:bg-surface-container transition-colors"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="min-w-0 mr-3">
+                        <p className="font-bold text-on-surface leading-tight">{row.name}</p>
+                        <p className="text-[10px] text-secondary uppercase font-bold tracking-wider mt-1">{clientName(row.clientId)}</p>
+                        <p className="text-[10px] text-secondary mt-1">#{row.id}</p>
                       </div>
-                      <div className="flex items-center justify-between mt-4">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Amount</span>
-                          <span className="text-lg font-bold text-primary">{row.amount}</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] font-bold text-secondary text-right">
-                             {row.time}
-                          </span>
-                          {(row.status === 'Paid' || row.status === 'Approved') && !isCompleting && (
-                            <button
-                              onClick={(e) => handleQuickComplete(e, row.id)}
-                              className="p-3 text-white bg-[#065F46] rounded-xl shadow-md active:scale-95"
-                            >
-                              <CheckCircle className="w-5 h-5" />
-                            </button>
-                          )}
-                        </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Deadline</span>
+                        <p className="font-medium text-on-surface">{formatDeadline(row.deadline)}</p>
+                        <p className={`text-[10px] ${getDaysUntil(row.deadline) < 0 ? 'text-error' : 'text-secondary'}`}>
+                          {getDaysUntil(row.deadline) < 0 ? 'Overdue' : getDaysUntil(row.deadline) === 0 ? 'Today' : `in ${getDaysUntil(row.deadline)}d`}
+                        </p>
                       </div>
-                    </motion.div>
-                  );
-                })}
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="flex-1 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+                        <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${row.progress}%` }} />
+                      </div>
+                      <span className="text-xs font-medium text-secondary">{row.progress}%</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Base</span>
+                        <span className="text-lg font-bold text-on-surface">{formatCurrency(row.basePrice)}</span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Added (OOS)</span>
+                        {row.outOfScopeAdded > 0
+                          ? <span className="text-lg font-bold text-[#065F46] dark:text-[#10B981]">+{formatCurrency(row.outOfScopeAdded)}</span>
+                          : <span className="text-lg font-bold text-secondary">—</span>}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </AnimatePresence>
             </div>
 
-            {activeScopes.length === 0 && (
+            {sortedProjects.length === 0 && (
               <div className="p-8 text-center text-secondary">
-                No active scopes. You're all caught up!
+                No active projects match your filters.
               </div>
             )}
           </div>
         </div>
       </div>
-
-      {/* Snackbar Location (Bottom Right) */}
-      <AnimatePresence>
-        {completedScope && (
-          <motion.div
-             initial={{ opacity: 0, y: 50, scale: 0.95 }}
-             animate={{ opacity: 1, y: 0, scale: 1 }}
-             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-             transition={{ duration: 0.2 }}
-             className="fixed bottom-6 right-6 z-50 flex items-center gap-4 bg-surface shadow-lg border border-surface-container-highest rounded-lg px-4 py-3"
-          >
-            <div className="flex items-center gap-2 text-on-surface">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              <span className="font-body-sm font-medium">Scope #{completedScope.id} moved to History.</span>
-            </div>
-            <div className="h-4 w-px bg-surface-container-highest"></div>
-            <button 
-              onClick={handleUndo}
-              className="text-sm font-bold text-primary hover:text-primary/80 transition-colors"
-            >
-              Undo
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

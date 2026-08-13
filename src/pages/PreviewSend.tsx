@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Copy, Send, Loader2, Mail, MessageCircle, ChevronUp, Save, FileText } from 'lucide-react';
+import { ai, aiStatus } from '../lib/ai';
 
 interface PreviewSendProps {
   details: any;
@@ -24,28 +25,64 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
   // --- STATE MANAGEMENT ---
   const [message, setMessage] = useState('');
   const [isGenerating, setIsGenerating] = useState(true);
+  const [draftSource, setDraftSource] = useState<'ai' | 'template'>('template');
   const [isSendMenuOpen, setIsSendMenuOpen] = useState(false);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // --- INITIALIZATION: DYNAMIC MESSAGE GENERATION ---
   useEffect(() => {
-    function generateDynamicMessage() {
+    let cancelled = false;
+
+    async function generateMessage() {
       const portalLink = "https://scopeguard.app/approval-portal/SC-4821";
       const deadlineStr = details.validUntil ? `by ${details.validUntil}` : "as soon as possible";
-      
-      if (tone === 'friendly') {
-        return `Hi there,\n\nWe've prepared an update regarding "${details.title}".\n\nPlease review and approve the details at your earliest convenience, ideally ${deadlineStr}, so we can keep things moving smoothly along.\n\nYou can access your secure portal right here to see the full details:\n${portalLink}\n\nLet me know if you have any questions!\n\nBest,\nThe ScopeGuard Team`;
-      } else if (tone === 'firm') {
-        return `Attention required:\n\nA new scope adjustment for "${details.title}" requires your approval. \n\nTo avoid any delays in the project schedule, this must be reviewed and approved ${deadlineStr}.\n\nPlease review the complete details and submit your approval via your secure client portal:\n${portalLink}\n\nThank you,\nScopeGuard Operations`;
-      } else {
-        // neutral
-        return `Hello,\n\nA scope adjustment for "${details.title}" is ready for your review.\n\nPlease follow the link below to review and approve the details ${deadlineStr}.\n\nSecure Client Portal:\n${portalLink}\n\nRegards,\nThe ScopeGuard Team`;
+
+      const templateMessage = () => {
+        if (tone === 'friendly') {
+          return `Hi there,\n\nWe've prepared an update regarding "${details.title}".\n\nPlease review and approve the details at your earliest convenience, ideally ${deadlineStr}, so we can keep things moving smoothly along.\n\nYou can access your secure portal right here to see the full details:\n${portalLink}\n\nLet me know if you have any questions!\n\nBest,\nThe ScopeGuard Team`;
+        } else if (tone === 'firm') {
+          return `Attention required:\n\nA new scope adjustment for "${details.title}" requires your approval. \n\nTo avoid any delays in the project schedule, this must be reviewed and approved ${deadlineStr}.\n\nPlease review the complete details and submit your approval via your secure client portal:\n${portalLink}\n\nThank you,\nScopeGuard Operations`;
+        } else {
+          // neutral
+          return `Hello,\n\nA scope adjustment for "${details.title}" is ready for your review.\n\nPlease follow the link below to review and approve the details ${deadlineStr}.\n\nSecure Client Portal:\n${portalLink}\n\nRegards,\nThe ScopeGuard Team`;
+        }
+      };
+
+      if (aiStatus.enabled) {
+        try {
+          const aiMessage = await ai.generateClientMessage({
+            title: details.title || 'Scope Adjustment',
+            deliverables: String(details.deliverables || '')
+              .split(/\n+/)
+              .map((l) => l.trim())
+              .filter(Boolean),
+            priceAdjustment: Number(details.priceAdjustment) || 0,
+            extraTimeDays: Number(details.extraTimeDays) || 0,
+            validUntil: details.validUntil,
+            tone: tone as 'friendly' | 'neutral' | 'firm',
+          });
+          if (!cancelled) {
+            setMessage(aiMessage);
+            setDraftSource('ai');
+          }
+          return;
+        } catch (error) {
+          console.error('AI message generation failed, using template:', error);
+        }
+      }
+
+      if (!cancelled) {
+        setMessage(templateMessage());
+        setDraftSource('template');
       }
     }
-    
-    setMessage(generateDynamicMessage());
-    setIsGenerating(false);
+
+    setIsGenerating(true);
+    generateMessage().finally(() => {
+      if (!cancelled) setIsGenerating(false);
+    });
+    return () => { cancelled = true; };
   }, [details, tone]);
 
   // --- REUSABLE LOGIC: CLICK OUTSIDE ---
@@ -112,16 +149,21 @@ export function PreviewSendPage({ details, tone, onBack, onPreviewPortal }: Prev
              <p className="font-body-sm text-on-surface-variant line-clamp-1">Review the surcharge notification below.</p>
           </div>
           <span className="font-label-caps text-on-surface-variant px-3 py-1 bg-surface-container rounded whitespace-nowrap">DRAFT</span>
+          {!isGenerating && (
+            <span className={`font-label-caps px-3 py-1 rounded whitespace-nowrap ${draftSource === 'ai' ? 'bg-primary-container text-on-primary-container' : 'bg-surface-container text-on-surface-variant'}`}>
+              {draftSource === 'ai' ? 'AI Drafted' : 'Template'}
+            </span>
+          )}
         </div>
 
         {/* SECTION 1: Generated Preview Box */}
         <section className="flex flex-col gap-2 w-full">
           <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-10 shadow-sm min-h-[300px] sm:min-h-[400px] flex flex-col relative group">
             {isGenerating ? (
-              // Loading State while Gemini is working
+              // Loading State while AI is working
               <div className="flex-1 flex flex-col items-center justify-center text-secondary gap-4">
                 <Loader2 className="w-8 h-8 animate-spin" />
-                <p className="font-body-base">AI is drafting your message...</p>
+                <p className="font-body-base">Drafting your message...</p>
               </div>
             ) : (
               // Success State

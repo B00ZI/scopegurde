@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Brain, Sparkles, Wand2, ArrowRight, ChevronDown, Plus, Search, Check, X } from 'lucide-react';
-import { extractScopeFromBrainDump } from '../lib/gemini';
+import { ai, aiStatus } from '../lib/ai';
 import { PageHeader } from '../components/PageHeader';
 import { MOCK_CLIENTS } from '../lib/mockData';
 
@@ -82,7 +82,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
     setIsExtracting(true);
     setExtractionError(null);
     try {
-      const extracted = await extractScopeFromBrainDump(brainDump);
+      const extracted = await ai.extractScopeFromBrainDump(brainDump);
       setDetails({
         title: extracted.title || '',
         deliverables: extracted.deliverables?.join('\n') || '',
@@ -92,7 +92,7 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
       });
     } catch (error) {
       console.error('AI Extraction failed:', error);
-      setExtractionError('AI Extraction failed. Please try again or fill the form manually.');
+      setExtractionError('Extraction failed. Please try again or fill the form manually.');
     } finally {
       setIsExtracting(false);
     }
@@ -116,11 +116,18 @@ export function CreateChangeOrderPage({ onGenerate, onCancel }: CreateChangeOrde
                 <Brain className="text-primary w-6 h-6" />
                 Brain Dump
               </h3>
-              <span className="bg-primary-container text-on-primary-container font-label-caps px-2 py-1 rounded self-start sm:self-auto">AI Assisted</span>
+              <span className={`bg-primary-container text-on-primary-container font-label-caps px-2 py-1 rounded self-start sm:self-auto ${aiStatus.enabled ? '' : 'bg-outline text-on-surface-container-lowest'}`}>
+                {aiStatus.enabled ? 'AI Assisted' : 'Offline Mode'}
+              </span>
             </div>
-            <p className="font-body-sm text-secondary mb-6">
-              Paste client emails, call notes, or raw thoughts. Our AI will extract the scope, pricing, and timeline adjustments.
+            <p className="font-body-sm text-secondary mb-2">
+              Paste client emails, call notes, or raw thoughts. {aiStatus.enabled ? 'Our AI will extract the scope, pricing, and timeline adjustments.' : 'Details are extracted locally with smart defaults.'}
             </p>
+            {!aiStatus.enabled && (
+              <p className="font-body-sm text-on-surface-variant mb-6">
+                AI is offline. To enable real AI extraction, set <span className="font-semibold text-primary">AI_PROVIDER=gemini</span> and <span className="font-semibold text-primary">GEMINI_API_KEY</span> in <span className="font-semibold">.env</span>.
+              </p>
+            )}
             <textarea 
               value={brainDump}
               onChange={(e) => setBrainDump(e.target.value)}

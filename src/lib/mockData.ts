@@ -1,5 +1,5 @@
 import { Zap, UserCircle, Eye, Clock, CreditCard, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { Client, Scope } from '../types';
+import { Client, Project, Scope } from '../types';
 
 /**
  * MOCK DATA REPOSITORY
@@ -34,6 +34,45 @@ export const MOCK_CLIENTS: Client[] = [
     lifetimeRevenue: '$12,850',
     status: 'Active',
     avatar: 'https://picsum.photos/seed/nexus/100/100'
+  },
+  { 
+    id: '3', 
+    name: 'Meridian Shipping', 
+    industry: 'Ocean Freight', 
+    contact: 'Tom Alvarez', 
+    email: 'tom@meridianshipping.com',
+    ongoingScopes: 2,
+    changeOrders: 1,
+    totalRevenue: 21400,
+    lifetimeRevenue: '$21,400',
+    status: 'Active',
+    avatar: 'https://picsum.photos/seed/meridian/100/100'
+  },
+  { 
+    id: '4', 
+    name: 'Global Partners', 
+    industry: 'Freight Forwarding', 
+    contact: 'Priya Nair', 
+    email: 'priya@globalpartners.co',
+    ongoingScopes: 1,
+    changeOrders: 3,
+    totalRevenue: 9300,
+    lifetimeRevenue: '$9,300',
+    status: 'Active',
+    avatar: 'https://picsum.photos/seed/global/100/100'
+  },
+  { 
+    id: '5', 
+    name: 'Velocity Logistics', 
+    industry: 'Express Delivery', 
+    contact: 'Marcus Lee', 
+    email: 'marcus@velocitylogistics.com',
+    ongoingScopes: 1,
+    changeOrders: 0,
+    totalRevenue: 7600,
+    lifetimeRevenue: '$7,600',
+    status: 'Active',
+    avatar: 'https://picsum.photos/seed/velocity/100/100'
   }
 ];
 
@@ -106,6 +145,69 @@ export const MOCK_SCOPES: any[] = [
     priceAdjustment: 0,
     extraTimeDays: 0,
     requestedBy: { name: 'Admin', role: 'Account Manager', email: 'admin@scopeguard.com' }
+  }
+];
+
+export const MOCK_PROJECTS: Project[] = [
+  { 
+    id: 'PRJ-1001', 
+    name: 'Q3 Hub Rebuild', 
+    clientId: '1', 
+    basePrice: 18500, 
+    outOfScopeAdded: 2400, 
+    progress: 65, 
+    deadline: '2026-08-20', 
+    pendingOutOfScopeRequests: 2 
+  },
+  { 
+    id: 'PRJ-1002', 
+    name: 'Last-Mile Routing Integration', 
+    clientId: '2', 
+    basePrice: 9600, 
+    outOfScopeAdded: 0, 
+    progress: 40, 
+    deadline: '2026-09-15', 
+    pendingOutOfScopeRequests: 0 
+  },
+  { 
+    id: 'PRJ-1003', 
+    name: 'Ocean Freight Portal', 
+    clientId: '3', 
+    basePrice: 12400, 
+    outOfScopeAdded: 3150, 
+    progress: 80, 
+    deadline: '2026-08-17', 
+    pendingOutOfScopeRequests: 1 
+  },
+  { 
+    id: 'PRJ-1004', 
+    name: 'Freight Rate Automation', 
+    clientId: '4', 
+    basePrice: 7800, 
+    outOfScopeAdded: 1250, 
+    progress: 25, 
+    deadline: '2026-11-02', 
+    pendingOutOfScopeRequests: 0 
+  },
+  { 
+    id: 'PRJ-1005', 
+    name: 'Express Tracking App', 
+    clientId: '5', 
+    basePrice: 14900, 
+    outOfScopeAdded: 500, 
+    progress: 15, 
+    deadline: '2026-08-19', 
+    pendingOutOfScopeRequests: 3 
+  },
+  { 
+    id: 'PRJ-1006', 
+    name: 'Acme Fleet Dashboard', 
+    clientId: '1', 
+    basePrice: 11200, 
+    outOfScopeAdded: 0, 
+    progress: 55, 
+    deadline: '2026-10-05', 
+    pendingOutOfScopeRequests: 0 
   }
 ];
 

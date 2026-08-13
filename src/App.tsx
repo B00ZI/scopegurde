@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { DashboardPage } from './pages/Dashboard';
@@ -51,6 +52,13 @@ export default function App() {
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [viewingScope, setViewingScope] = useState<any>(null);
+
+  // --- STUB: NEW PROJECT FLOW ---
+  const [newProjectToast, setNewProjectToast] = useState(false);
+  const handleNewProject = () => {
+    setNewProjectToast(true);
+    window.setTimeout(() => setNewProjectToast(false), 3000);
+  };
 
   /**
    * Router Logic:
@@ -147,12 +155,12 @@ export default function App() {
 
     // 5. Default Navigation: Standard Admin Dashboard Views
     switch (currentPage) {
-      case 'dashboard': return <DashboardPage onViewScope={(s) => setViewingScope(s)} />;
+      case 'dashboard': return <DashboardPage onNewProject={handleNewProject} />;
       case 'clients': return <ClientsPage onAddClient={() => setIsAddingClient(true)} onViewClient={(c) => setViewingClient(c)} onEditClient={(c) => setEditingClient(c)} onDeleteClient={() => {}} />;
       case 'notifications': return <NotificationsPage onViewScope={(s) => setViewingScope(s)} />;
       case 'history': return <CompletedScopesPage onViewScope={(s) => setViewingScope(s)} />;
       case 'settings': return <SettingsPage onLogout={() => setIsAuthenticated(false)} />;
-      default: return <DashboardPage />;
+      default: return <DashboardPage onNewProject={handleNewProject} />;
     }
   };
 
@@ -207,7 +215,7 @@ export default function App() {
       />
       <div className="flex-1 flex flex-col min-h-screen">
         <TopBar 
-          onNewScope={() => setIsCreatingOrder(true)} 
+          onNewProject={handleNewProject} 
           isSidebarCollapsed={isSidebarCollapsed}
           onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           // Dynamically adjust TopBar title and back button based on active wizard state
@@ -235,6 +243,20 @@ export default function App() {
           {renderContent()}
         </main>
       </div>
+
+      <AnimatePresence>
+        {newProjectToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-6 right-6 z-50 bg-surface shadow-lg border border-surface-container-highest rounded-lg px-4 py-3 text-sm font-medium text-on-surface"
+          >
+            New Project flow coming soon.
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -15,11 +15,13 @@ import {
   Globe,
   Award,
   LogOut as LogOutIcon,
-  ShieldAlert
+  ShieldAlert,
+  Sparkles
 } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 import { SearchableDropdown } from '../components/SearchableDropdown';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { aiStatus } from '../lib/ai';
 
 type SettingsTab = 'profile' | 'security' | 'business' | 'payments' | 'preferences';
 
@@ -221,11 +223,42 @@ export function SettingsPage({ onLogout }: { onLogout?: () => void }) {
                     </div>
                   </div>
                 </section>
+
+                {/* AI ASSISTANT SECTION */}
+                <section className="pt-8 border-t border-surface-container-highest">
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-on-surface">AI Assistant</h3>
+                    <p className="text-xs text-secondary mt-1">Connects the AI scope extractor and message drafting.</p>
+                  </div>
+                  <div className={`p-6 rounded-2xl space-y-6 border ${aiStatus.enabled ? 'bg-primary/5 border-primary/20' : 'bg-surface-container-low border-surface-container-highest'}`}>
+                    <div className="flex flex-col sm:flex-row items-center gap-5 justify-between">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${aiStatus.enabled ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-secondary'}`}>
+                          <Sparkles className="w-6 h-6" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-black text-on-surface">AI Provider: {aiStatus.provider === 'gemini' ? 'Google Gemini' : 'Offline Mode'}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <div className={`w-1.5 h-1.5 rounded-full ${aiStatus.enabled ? 'bg-primary' : 'bg-outline'}`} />
+                            <span className="text-[9px] font-black uppercase text-secondary tracking-wider">
+                              Status: {aiStatus.enabled ? 'Connected' : 'Not configured'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-4 items-start text-secondary border-t border-surface-container-highest pt-5">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <p className="text-[11px] leading-relaxed italic">
+                        {aiStatus.enabled
+                          ? 'AI is active. Brain Dump extraction and message drafting use the configured provider.'
+                          : `The app runs in offline mode with no API key required. To enable AI, create a .env file with GEMINI_API_KEY="<your key>" and AI_PROVIDER=gemini.`}
+                      </p>
+                    </div>
+                  </div>
+                </section>
               </div>
             )}
-
-
-            {/* PAYMENTS SECTION */}
             {activeTab === 'payments' && (
               <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <section>

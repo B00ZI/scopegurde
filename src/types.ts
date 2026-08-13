@@ -38,6 +38,17 @@ export interface ChangeOrder {
 
 export type Scope = ChangeOrder;
 
+export interface Project {
+  id: string;
+  name: string;
+  clientId: string;
+  basePrice: number;
+  outOfScopeAdded: number;
+  progress: number;
+  deadline: string;
+  pendingOutOfScopeRequests: number;
+}
+
 export interface Notification {
   id: string;
   type: 'warning' | 'success' | 'info';

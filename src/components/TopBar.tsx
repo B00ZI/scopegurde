@@ -2,7 +2,7 @@ import { ArrowLeft, Menu } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 
 interface TopBarProps {
-  onNewScope: () => void;
+  onNewProject: () => void;
   isSidebarCollapsed: boolean;
   onToggleMobileMenu?: () => void;
   title?: string;
@@ -13,11 +13,11 @@ interface TopBarProps {
  * COMPONENT: Top Navigation Bar
  * 
  * Responsibilities:
- * 1. Global Action: Triggers the "New Scope" workflow.
+ * 1. Global Action: Triggers the "New Project" workflow.
  * 2. Context Aware: Displays a back button and title when inside a workflow (like Preview).
  * 3. Theme Manager: Controls application-wide Light/Dark mode state and persists it.
  */
-export function TopBar({ onNewScope, isSidebarCollapsed, onToggleMobileMenu, title, onBack }: TopBarProps) {
+export function TopBar({ onNewProject, isSidebarCollapsed, onToggleMobileMenu, title, onBack }: TopBarProps) {
   return (
     <header 
       // Layout shifts dynamically based on Sidebar width for a smooth animation
@@ -50,14 +50,14 @@ export function TopBar({ onNewScope, isSidebarCollapsed, onToggleMobileMenu, tit
       </div>
       
       <div className="flex items-center gap-2 sm:gap-4">
-        {/* Only show the New Scope button if we aren't already deep inside a workflow */}
+        {/* Only show the New Project button if we aren't already deep inside a workflow */}
         {!onBack && (
           <button 
-            onClick={onNewScope}
+            onClick={onNewProject}
             className="bg-primary text-on-primary font-button px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg hover:opacity-90 transition-all flex items-center gap-2 shadow-sm active:scale-95 text-xs sm:text-sm"
           >
-            <span className="sm:inline hidden">+ New Scope</span>
-            <span className="sm:hidden">+ Scope</span>
+            <span className="sm:inline hidden">+ New Project</span>
+            <span className="sm:hidden">+ New</span>
           </button>
         )}
       </div>
