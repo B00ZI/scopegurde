@@ -15,9 +15,11 @@ import { ClientDetailsPage } from './pages/ClientDetails';
 import { LoginPage } from './pages/Login';
 import { SignUpPage } from './pages/SignUp';
 import { ScopeDetailsPage } from './pages/ScopeDetails';
-import { CompletedScopesPage } from './pages/CompletedScopes';
+import { ProjectHistoryPage } from './pages/ProjectHistory';
+import { ProjectViewPage } from './pages/ProjectView';
 import { EditClientPage } from './pages/EditClient';
 import { Client } from './types';
+import { MOCK_PROJECTS } from './lib/mockData';
 
 /**
  * ENTRY POINT & MAIN LAYOUT CONTROLLER
@@ -52,6 +54,13 @@ export default function App() {
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [viewingScope, setViewingScope] = useState<any>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [viewingProjectOrigin, setViewingProjectOrigin] = useState('dashboard');
+
+  const openProject = (id: string) => {
+    setViewingProjectOrigin(currentPage);
+    setSelectedProjectId(id);
+  };
 
   // --- STUB: NEW PROJECT FLOW ---
   const [newProjectToast, setNewProjectToast] = useState(false);
@@ -153,14 +162,26 @@ export default function App() {
       );
     }
 
+    if (selectedProjectId) {
+      return (
+        <ProjectViewPage
+          projectId={selectedProjectId}
+          onBack={() => {
+            setSelectedProjectId(null);
+            setCurrentPage(viewingProjectOrigin);
+          }}
+        />
+      );
+    }
+
     // 5. Default Navigation: Standard Admin Dashboard Views
     switch (currentPage) {
-      case 'dashboard': return <DashboardPage onNewProject={handleNewProject} />;
+      case 'dashboard': return <DashboardPage onNewProject={handleNewProject} onSelectProject={openProject} onViewHistory={() => setCurrentPage('history')} />;
       case 'clients': return <ClientsPage onAddClient={() => setIsAddingClient(true)} onViewClient={(c) => setViewingClient(c)} onEditClient={(c) => setEditingClient(c)} onDeleteClient={() => {}} />;
       case 'notifications': return <NotificationsPage onViewScope={(s) => setViewingScope(s)} />;
-      case 'history': return <CompletedScopesPage onViewScope={(s) => setViewingScope(s)} />;
+      case 'history': return <ProjectHistoryPage onSelectProject={openProject} />;
       case 'settings': return <SettingsPage onLogout={() => setIsAuthenticated(false)} />;
-      default: return <DashboardPage onNewProject={handleNewProject} />;
+      default: return <DashboardPage onNewProject={handleNewProject} onSelectProject={openProject} onViewHistory={() => setCurrentPage('history')} />;
     }
   };
 
@@ -210,6 +231,7 @@ export default function App() {
           setViewingClient(null);
           setEditingClient(null);
           setViewingScope(null);
+          setSelectedProjectId(null);
           setIsMobileMenuOpen(false); // Close mobile menu on page change
         }} 
       />
@@ -226,6 +248,7 @@ export default function App() {
             editingClient ? 'Edit Client' :
             viewingClient ? 'Client Summary' :
             viewingScope ? `Scope #${viewingScope.id}` :
+            selectedProjectId ? MOCK_PROJECTS.find((p) => p.id === selectedProjectId)?.name :
             undefined
           }
           onBack={
@@ -235,6 +258,7 @@ export default function App() {
             editingClient ? () => setEditingClient(null) :
             viewingClient ? () => setViewingClient(null) :
             viewingScope ? () => setViewingScope(null) :
+            selectedProjectId ? () => { setSelectedProjectId(null); setCurrentPage(viewingProjectOrigin); } :
             undefined
           }
         />

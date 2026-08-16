@@ -37,7 +37,7 @@ export function Sidebar({
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'clients', label: 'Clients', icon: Users },
-    { id: 'history', label: 'Completed Scopes', icon: Archive },
+    { id: 'history', label: 'Project History', icon: Archive },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
