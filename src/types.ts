@@ -47,7 +47,7 @@ export interface Milestone {
   /** Optional per-milestone deadline. A milestone without one can never be overdue. */
   deadline?: string;
   description?: string;
-  deliverables?: string[];
+  deliverables?: { id: string; text: string; done: boolean }[];
 }
 
 export interface Project {
@@ -119,4 +119,31 @@ export interface AttentionItem {
   type: AttentionType;
   /** Short human-readable description shown in the Details column. */
   details: string;
+}
+
+export type RoomSender = 'freelancer' | 'client';
+
+export interface RoomMessage {
+  id: string;
+  projectId: string;
+  sender: RoomSender;
+  text: string;
+  time: string;
+}
+
+export type ActivityType =
+  | 'project-created'
+  | 'milestone'
+  | 'change-request'
+  | 'scope-check'
+  | 'client-decision'
+  | 'request-submitted';
+
+export interface ActivityEvent {
+  id: string;
+  projectId: string;
+  type: ActivityType;
+  title: string;
+  description?: string;
+  time: string;
 }

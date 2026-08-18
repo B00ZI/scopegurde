@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCheck, Bell, CheckCircle2, Eye, CreditCard, AlertTriangle } from 'lucide-react';
+import { CheckCheck, Bell, CheckCircle2, Eye, CreditCard, AlertTriangle, ArrowRight } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 import { MOCK_NOTIFICATIONS } from '../lib/mockData';
 
@@ -11,9 +11,7 @@ const ICON_MAP: Record<string, any> = {
   'bell': Bell
 };
 
-interface NotificationsPageProps {
-  onViewScope?: (scope: any) => void;
-}
+
 
 /**
  * INBOX / NOTIFICATIONS PAGE
@@ -27,28 +25,7 @@ interface NotificationsPageProps {
  * - System emits events -> Appended to notification list
  * - User acts on them -> Redirected to relevant Scope or Client page
  */
-export function NotificationsPage({ onViewScope }: NotificationsPageProps) {
-  // --- BUSINESS LOGIC: NAVIGATION MAPPING ---
-  // Transforms notification contextual data into a Scope object for viewing
-  const handleNotificationClick = (notification: any) => {
-    if (onViewScope && notification.category !== 'System Alerts') {
-      let derivedStatus: 'Draft' | 'Sent' | 'Approved' | 'Paid' | 'Expired' | 'Completed' = 'Sent';
-      
-      if (notification.title && notification.title.includes('Paid')) derivedStatus = 'Paid';
-      else if (notification.title && notification.title.includes('Approved')) derivedStatus = 'Approved';
-      else if (notification.category === 'Deadline Approaching') derivedStatus = 'Expired';
-      
-      onViewScope({
-        id: notification.title.match(/#(\d+)/)?.[1] || '1044',
-        description: notification.title.split('#')[0] || notification.title,
-        amount: '$1,200.00',
-        time: notification.time,
-        status: derivedStatus,
-        client: 'Meridian Shipping'
-      });
-    }
-  };
-
+export function NotificationsPage({ onSelectProject }: { onSelectProject?: (projectId: string) => void }) {
   return (
     <div className="max-w-container-max mx-auto pt-2 pb-8">
       {/* Header Injection */}
@@ -76,8 +53,7 @@ export function NotificationsPage({ onViewScope }: NotificationsPageProps) {
             return (
             <div 
               key={notification.id}
-              onClick={() => handleNotificationClick(notification)}
-              className={`bg-surface-container-lowest border rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start gap-4 sm:gap-6 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer relative overflow-hidden group shadow-sm ${
+              className={`bg-surface-container-lowest border rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start gap-4 sm:gap-6 hover:bg-surface-container-low transition-colors duration-200 relative overflow-hidden group shadow-sm ${
                 notification.type === 'warning' ? 'border-error/30 bg-error-container/5' : 'border-surface-container-highest'
               }`}
             >
@@ -103,12 +79,16 @@ export function NotificationsPage({ onViewScope }: NotificationsPageProps) {
                   {notification.message}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-auto">
-                  <button className={`w-full sm:w-auto font-bold px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 ${
-                    notification.type === 'warning' ? 'bg-error text-on-primary hover:bg-error/90' : 
-                    notification.type === 'success' ? 'bg-primary text-on-primary hover:bg-primary/90' :
-                    'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'
-                  }`}>
+                  <button
+                    onClick={() => onSelectProject?.(notification.projectId)}
+                    className={`w-full sm:w-auto font-bold px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 ${
+                      notification.type === 'warning' ? 'bg-error text-on-primary hover:bg-error/90' : 
+                      notification.type === 'success' ? 'bg-primary text-on-primary hover:bg-primary/90' :
+                      'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'
+                    }`}
+                  >
                     {notification.actionLabel}
+                    {notification.projectId && <ArrowRight className="w-4 h-4" />}
                   </button>
                   {notification.type === 'warning' && (
                     <button className="w-full sm:w-auto font-bold text-error/80 hover:text-error hover:bg-error/5 py-2.5 rounded-xl transition-colors">Dismiss</button>

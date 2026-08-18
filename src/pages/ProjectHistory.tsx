@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Search, Filter, ArrowDown, ArrowUp } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 import { SearchableDropdown } from '../components/SearchableDropdown';
-import { MOCK_CLIENTS, MOCK_PROJECTS } from '../lib/mockData';
+import { MOCK_CLIENTS } from '../lib/mockData';
+import { useProjects } from '../lib/appStore';
 import { Project, ProjectStatus } from '../types';
 
 const DAY_MS = 1000 * 60 * 60 * 24;
@@ -42,7 +43,7 @@ export function ProjectHistoryPage({ onSelectProject }: { onSelectProject?: (pro
 
   const clientName = (clientId: string) => MOCK_CLIENTS.find((c) => c.id === clientId)?.name ?? 'Unknown';
 
-  const historyProjects = MOCK_PROJECTS.filter((p) => HISTORY_STATUSES.includes(p.status));
+  const historyProjects = useProjects().filter((p) => HISTORY_STATUSES.includes(p.status));
 
   const filteredProjects = historyProjects.filter((p) => {
     const client = clientName(p.clientId);

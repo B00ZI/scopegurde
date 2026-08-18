@@ -1,25 +1,22 @@
-import { useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { DashboardPage } from './pages/Dashboard';
 import { ClientsPage } from './pages/Clients';
 import { NotificationsPage } from './pages/Notifications';
 import { SettingsPage } from './pages/Settings';
-import { CreateChangeOrderPage } from './pages/CreateChangeOrder';
-import { PreviewSendPage } from './pages/PreviewSend';
 import { ApprovalPage } from './pages/Approval';
-import { ApprovalPortalPage } from './pages/ApprovalPortal';
 import { AddClientPage } from './pages/AddClient';
 import { ClientDetailsPage } from './pages/ClientDetails';
 import { LoginPage } from './pages/Login';
 import { SignUpPage } from './pages/SignUp';
-import { ScopeDetailsPage } from './pages/ScopeDetails';
 import { ProjectHistoryPage } from './pages/ProjectHistory';
 import { ProjectViewPage } from './pages/ProjectView';
 import { EditClientPage } from './pages/EditClient';
+import { NewProjectPage } from './pages/NewProject';
+import { ClientRoomPage } from './pages/ClientRoom';
 import { Client } from './types';
-import { MOCK_PROJECTS } from './lib/mockData';
+import { useProjects } from './lib/appStore';
 
 /**
  * ENTRY POINT & MAIN LAYOUT CONTROLLER
@@ -42,32 +39,43 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // --- WORKFLOW: CREATE SCOPE WIZARD ---
-  // isCreatingOrder -> orderPreviewDetails -> isPreviewingPortal
-  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
-  const [orderPreviewDetails, setOrderPreviewDetails] = useState<any>(null);
-  const [previewTone, setPreviewTone] = useState('friendly');
-  const [isPreviewingPortal, setIsPreviewingPortal] = useState(false);
-
   // --- DRILL-DOWN / SUB-ROUTING STATES ---
   const [isAddingClient, setIsAddingClient] = useState(false);
   const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const [viewingScope, setViewingScope] = useState<any>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [viewingProjectOrigin, setViewingProjectOrigin] = useState('dashboard');
+
+  const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
+  const [clientRoomProjectId, setClientRoomProjectId] = useState<string | null>(null);
 
   const openProject = (id: string) => {
     setViewingProjectOrigin(currentPage);
     setSelectedProjectId(id);
   };
 
-  // --- STUB: NEW PROJECT FLOW ---
-  const [newProjectToast, setNewProjectToast] = useState(false);
-  const handleNewProject = () => {
-    setNewProjectToast(true);
-    window.setTimeout(() => setNewProjectToast(false), 3000);
+  const projects = useProjects();
+
+  const openClientRoom = (id: string) => {
+    setClientRoomProjectId(id);
+    window.location.hash = `/room/${id}`;
   };
+
+  const closeClientRoom = () => {
+    setClientRoomProjectId(null);
+    window.location.hash = '';
+  };
+
+  // Hash routing for the public client room (#/room/:projectId)
+  useEffect(() => {
+    const parse = () => {
+      const m = window.location.hash.match(/^#\/room\/(.+)$/);
+      if (m) setClientRoomProjectId(decodeURIComponent(m[1]));
+    };
+    window.addEventListener('hashchange', parse);
+    parse();
+    return () => window.removeEventListener('hashchange', parse);
+  }, []);
 
   /**
    * Router Logic:
@@ -75,46 +83,26 @@ export default function App() {
    * Highest priority: Full-screen public portals -> Preview Modals -> Creation Wizards -> Standard Navigation.
    */
   const renderContent = () => {
-    // 1. Standalone Demo Screens (No layout wrappers)
+    // 1. Full-screen public client room
+    if (clientRoomProjectId) {
+      return <ClientRoomPage projectId={clientRoomProjectId} onExit={closeClientRoom} />;
+    }
+
+    // 2. Standalone Demo Screens (No layout wrappers)
     if (currentPage === 'approval') return <ApprovalPage />;
-    
-    // 2. Client-Facing Public Portal Preview
-    if (isPreviewingPortal && orderPreviewDetails) {
+
+    // 3. New Project wizard (in-layout)
+    if (isNewProjectOpen) {
       return (
-        <ApprovalPortalPage 
-          details={orderPreviewDetails}
-          onApprove={() => {
-             // Reset back to dashboard on success
-            setIsPreviewingPortal(false);
-            setOrderPreviewDetails(null);
+        <NewProjectPage
+          onDone={(id) => {
+            setIsNewProjectOpen(false);
+            openProject(id);
           }}
-          onDecline={() => setIsPreviewingPortal(false)}
+          onCancel={() => setIsNewProjectOpen(false)}
         />
       );
     }
-    
-    // 3. Admin View: AI-Generated Message Preview
-    if (orderPreviewDetails) return (
-      <PreviewSendPage 
-        details={orderPreviewDetails} 
-        tone={previewTone} 
-        onBack={() => setOrderPreviewDetails(null)} 
-        onPreviewPortal={() => setIsPreviewingPortal(true)}
-      />
-    );
-    
-    // 4. Admin View: Scope Document Creation Form
-    if (isCreatingOrder) return (
-      <CreateChangeOrderPage 
-        onCancel={() => setIsCreatingOrder(false)}
-        onGenerate={(details, tone) => {
-          // Transition state from "Creating" to "Previewing" while passing payload forward
-          setOrderPreviewDetails(details);
-          setPreviewTone(tone);
-          setIsCreatingOrder(false);
-        }} 
-      />
-    );
 
     // Sub-views for Clients area
     if (isAddingClient) {
@@ -143,21 +131,7 @@ export default function App() {
           client={viewingClient}
           onBack={() => setViewingClient(null)}
           onEdit={() => setEditingClient(viewingClient)}
-          onRemove={() => setViewingClient(null)} // Mock removal
-          onViewScope={(s) => {
-            setViewingClient(null); // Optional: if we want to drop the client context, or we can just set viewingScope
-            setViewingScope(s);
-          }}
-        />
-      );
-    }
-
-    if (viewingScope) {
-      return (
-        <ScopeDetailsPage 
-          scope={viewingScope}
-          onBack={() => setViewingScope(null)}
-          onViewScope={(s) => setViewingScope(s)}
+          onRemove={() => setViewingClient(null)}
         />
       );
     }
@@ -170,27 +144,28 @@ export default function App() {
             setSelectedProjectId(null);
             setCurrentPage(viewingProjectOrigin);
           }}
+          onOpenRoom={openClientRoom}
         />
       );
     }
 
     // 5. Default Navigation: Standard Admin Dashboard Views
     switch (currentPage) {
-      case 'dashboard': return <DashboardPage onNewProject={handleNewProject} onSelectProject={openProject} onViewHistory={() => setCurrentPage('history')} />;
+      case 'dashboard': return <DashboardPage onNewProject={() => setIsNewProjectOpen(true)} onSelectProject={openProject} onViewHistory={() => setCurrentPage('history')} />;
       case 'clients': return <ClientsPage onAddClient={() => setIsAddingClient(true)} onViewClient={(c) => setViewingClient(c)} onEditClient={(c) => setEditingClient(c)} onDeleteClient={() => {}} />;
-      case 'notifications': return <NotificationsPage onViewScope={(s) => setViewingScope(s)} />;
+      case 'notifications': return <NotificationsPage onSelectProject={openProject} />;
       case 'history': return <ProjectHistoryPage onSelectProject={openProject} />;
       case 'settings': return <SettingsPage onLogout={() => setIsAuthenticated(false)} />;
-      default: return <DashboardPage onNewProject={handleNewProject} onSelectProject={openProject} onViewHistory={() => setCurrentPage('history')} />;
+      default: return <DashboardPage onNewProject={() => setIsNewProjectOpen(true)} onSelectProject={openProject} onViewHistory={() => setCurrentPage('history')} />;
     }
   };
 
   /**
    * Special Layout Handler:
-   * Client-facing screens (like the public approval portal) should NOT render the admin TopBar or Sidebar.
+   * Client-facing screens (like the public client room or approval portal) should NOT render the admin TopBar or Sidebar.
    * If a portal is active, we return the specific content instantly without standard dashboard wrappers.
    */
-  if (currentPage === 'approval' || isPreviewingPortal) {
+  if (clientRoomProjectId || currentPage === 'approval') {
     return <>{renderContent()}</>;
   }
 
@@ -225,39 +200,33 @@ export default function App() {
         onPageChange={(page) => {
           // Navigating away clears any active wizards
           setCurrentPage(page);
-          setIsCreatingOrder(false);
-          setOrderPreviewDetails(null);
           setIsAddingClient(false);
           setViewingClient(null);
           setEditingClient(null);
-          setViewingScope(null);
           setSelectedProjectId(null);
-          setIsMobileMenuOpen(false); // Close mobile menu on page change
+          setIsNewProjectOpen(false);
+          setIsMobileMenuOpen(false);
         }} 
       />
       <div className="flex-1 flex flex-col min-h-screen">
         <TopBar 
-          onNewProject={handleNewProject} 
+          onNewProject={() => setIsNewProjectOpen(true)} 
           isSidebarCollapsed={isSidebarCollapsed}
           onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           // Dynamically adjust TopBar title and back button based on active wizard state
           title={
-            orderPreviewDetails ? 'Preview & Send' : 
-            isCreatingOrder ? 'Create New Scope' : 
+            isNewProjectOpen ? 'New Project' :
             isAddingClient ? 'Add Client' :
             editingClient ? 'Edit Client' :
             viewingClient ? 'Client Summary' :
-            viewingScope ? `Scope #${viewingScope.id}` :
-            selectedProjectId ? MOCK_PROJECTS.find((p) => p.id === selectedProjectId)?.name :
+            selectedProjectId ? projects.find((p) => p.id === selectedProjectId)?.name :
             undefined
           }
           onBack={
-            orderPreviewDetails ? () => setOrderPreviewDetails(null) : 
-            isCreatingOrder ? () => setIsCreatingOrder(false) : 
+            isNewProjectOpen ? () => setIsNewProjectOpen(false) :
             isAddingClient ? () => setIsAddingClient(false) :
             editingClient ? () => setEditingClient(null) :
             viewingClient ? () => setViewingClient(null) :
-            viewingScope ? () => setViewingScope(null) :
             selectedProjectId ? () => { setSelectedProjectId(null); setCurrentPage(viewingProjectOrigin); } :
             undefined
           }
@@ -267,20 +236,6 @@ export default function App() {
           {renderContent()}
         </main>
       </div>
-
-      <AnimatePresence>
-        {newProjectToast && (
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bottom-6 right-6 z-50 bg-surface shadow-lg border border-surface-container-highest rounded-lg px-4 py-3 text-sm font-medium text-on-surface"
-          >
-            New Project flow coming soon.
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

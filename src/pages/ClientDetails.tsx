@@ -9,7 +9,6 @@ interface ClientDetailsPageProps {
   onBack: () => void;
   onEdit: () => void;
   onRemove: () => void;
-  onViewScope?: (scope: any) => void;
 }
 
 /**
@@ -18,7 +17,7 @@ interface ClientDetailsPageProps {
  * Purpose: Single-client view displaying overarching statistics, basic profile data,
  * and a history of their scope/change orders.
  */
-export function ClientDetailsPage({ client, onBack, onEdit, onRemove, onViewScope }: ClientDetailsPageProps) {
+export function ClientDetailsPage({ client, onBack, onEdit, onRemove }: ClientDetailsPageProps) {
   const [showConfirmRemove, setShowConfirmRemove] = useState(false);
 
   const stats = [
@@ -93,8 +92,7 @@ export function ClientDetailsPage({ client, onBack, onEdit, onRemove, onViewScop
             <div className="divide-y divide-surface-container-highest">
               {/* Mock Row 1 */}
               <div 
-                onClick={() => onViewScope && onViewScope({ id: '1092', description: 'Q3 Analytics Expansion', amount: '$4,200.00', time: 'Oct 12, 2023', status: 'Approved', client: client.name })}
-                className="p-4 sm:p-6 hover:bg-surface transition-colors cursor-pointer"
+                className="p-4 sm:p-6 hover:bg-surface transition-colors"
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex-1 pr-4">
@@ -114,8 +112,7 @@ export function ClientDetailsPage({ client, onBack, onEdit, onRemove, onViewScop
 
               {/* Mock Row 2 */}
               <div 
-                onClick={() => onViewScope && onViewScope({ id: '1081', description: 'Express Shipping Integration', amount: '$1,850.00', time: 'Sep 05, 2023', status: 'Draft', client: client.name })}
-                className="p-6 hover:bg-surface transition-colors cursor-pointer"
+                className="p-6 hover:bg-surface transition-colors"
               >
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -135,8 +132,7 @@ export function ClientDetailsPage({ client, onBack, onEdit, onRemove, onViewScop
 
               {/* Mock Row 3 */}
               <div 
-                onClick={() => onViewScope && onViewScope({ id: '1001', description: 'Dashboard V1 Setup', amount: 'Baseline', time: 'Jul 22, 2023', status: 'Completed', client: client.name })}
-                className="p-6 hover:bg-surface transition-colors cursor-pointer"
+                className="p-6 hover:bg-surface transition-colors"
               >
                 <div className="flex justify-between items-start mb-2">
                   <div>

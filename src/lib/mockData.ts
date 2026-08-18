@@ -1,5 +1,5 @@
 import { Zap, UserCircle, Eye, Clock, CreditCard, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { AttentionItem, ChangeRequest, Client, ContractSection, Project, Scope } from '../types';
+import { ActivityEvent, AttentionItem, ChangeRequest, Client, ContractSection, Project, RoomMessage, Scope } from '../types';
 
 /**
  * MOCK DATA REPOSITORY
@@ -165,21 +165,33 @@ export const MOCK_PROJECTS: Project[] = [
         title: 'Discovery & Research', 
         status: 'Done',
         description: 'Kickoff, stakeholder interviews and a UX audit of the existing hub.',
-        deliverables: ['Stakeholder interviews', 'Competitor & UX audit', 'Sitemap v1'],
+        deliverables: [
+          { id: 'D1', text: 'Stakeholder interviews', done: true },
+          { id: 'D2', text: 'Competitor & UX audit', done: true },
+          { id: 'D3', text: 'Sitemap v1', done: true },
+        ],
       },
       { 
         id: 'M2', 
         title: 'Wireframes', 
         status: 'Done',
         description: 'Low- and high-fidelity wireframes for the main flows.',
-        deliverables: ['Homepage wireframes', 'Inner page wireframes', 'Approved click-through'],
+        deliverables: [
+          { id: 'D4', text: 'Homepage wireframes', done: true },
+          { id: 'D5', text: 'Inner page wireframes', done: true },
+          { id: 'D6', text: 'Approved click-through', done: true },
+        ],
       },
       { 
         id: 'M3', 
         title: 'Brand guidelines', 
         status: 'Done',
         description: 'Refresh the brand guidelines and apply them to the new templates.',
-        deliverables: ['Updated type scale', 'Color tokens', 'Component styles'],
+        deliverables: [
+          { id: 'D7', text: 'Updated type scale', done: true },
+          { id: 'D8', text: 'Color tokens', done: true },
+          { id: 'D9', text: 'Component styles', done: true },
+        ],
       },
       { 
         id: 'M4', 
@@ -187,14 +199,21 @@ export const MOCK_PROJECTS: Project[] = [
         status: 'InProgress', 
         deadline: '2026-08-12',
         description: 'Design and build the new homepage plus the four inner pages.',
-        deliverables: ['Homepage design', '4 inner page designs'],
+        deliverables: [
+          { id: 'D10', text: 'Homepage mockup', done: true },
+          { id: 'D11', text: '4 inner page designs', done: false },
+        ],
       },
       { 
         id: 'M5', 
         title: 'QA & Launch', 
         status: 'Todo',
         description: 'Cross-browser QA, accessibility pass and launch.',
-        deliverables: ['Accessibility audit', 'Cross-browser QA', 'Launch checklist'],
+        deliverables: [
+          { id: 'D12', text: 'Accessibility audit', done: false },
+          { id: 'D13', text: 'Cross-browser QA', done: false },
+          { id: 'D14', text: 'Launch checklist', done: false },
+        ],
       },
     ],
   },
@@ -209,13 +228,35 @@ export const MOCK_PROJECTS: Project[] = [
     status: 'In Progress',
     createdAt: '2026-06-02',
     milestones: [
-      { id: 'M1', title: 'Route data ingestion', status: 'Done' },
-      { id: 'M2', title: 'Geocoding service', status: 'Done' },
-      { id: 'M3', title: 'Admin dashboard', status: 'InProgress' },
-      { id: 'M4', title: 'Dispatch UI', status: 'Todo' },
-      { id: 'M5', title: 'Real-time tracking', status: 'Todo' },
-      { id: 'M6', title: 'Driver app', status: 'Todo' },
-      { id: 'M7', title: 'Go-live', status: 'Todo' },
+      { id: 'M1', title: 'Route data ingestion', status: 'Done', deliverables: [
+        { id: 'D1', text: 'CSV/JSON import pipeline', done: true },
+        { id: 'D2', text: 'Data validation layer', done: true },
+      ] },
+      { id: 'M2', title: 'Geocoding service', status: 'Done', deliverables: [
+        { id: 'D3', text: 'Address normalization', done: true },
+        { id: 'D4', text: 'Coordinate resolution', done: true },
+      ] },
+      { id: 'M3', title: 'Admin dashboard', status: 'InProgress', deliverables: [
+        { id: 'D5', text: 'Route management table', done: true },
+        { id: 'D6', text: 'Dispatcher assignment UI', done: false },
+      ] },
+      { id: 'M4', title: 'Dispatch UI', status: 'Todo', deliverables: [
+        { id: 'D7', text: 'Drag-and-drop dispatch board', done: false },
+        { id: 'D8', text: 'Bulk route assignment', done: false },
+      ] },
+      { id: 'M5', title: 'Real-time tracking', status: 'Todo', deliverables: [
+        { id: 'D9', text: 'Live GPS feed integration', done: false },
+        { id: 'D10', text: 'Map visualization', done: false },
+      ] },
+      { id: 'M6', title: 'Driver app', status: 'Todo', deliverables: [
+        { id: 'D11', text: 'React Native shell', done: false },
+        { id: 'D12', text: 'Route navigation screen', done: false },
+        { id: 'D13', text: 'Proof-of-delivery capture', done: false },
+      ] },
+      { id: 'M7', title: 'Go-live', status: 'Todo', deliverables: [
+        { id: 'D14', text: 'Staging sign-off', done: false },
+        { id: 'D15', text: 'Production deploy', done: false },
+      ] },
     ],
   },
   { 
@@ -229,10 +270,23 @@ export const MOCK_PROJECTS: Project[] = [
     status: 'In Progress',
     createdAt: '2026-05-27',
     milestones: [
-      { id: 'M1', title: 'Requirements', status: 'Done' },
-      { id: 'M2', title: 'Portal design', status: 'Done' },
-      { id: 'M3', title: 'Booking flow', status: 'Done' },
-      { id: 'M4', title: 'Invoicing module', status: 'InProgress' },
+      { id: 'M1', title: 'Requirements', status: 'Done', deliverables: [
+        { id: 'D1', text: 'Stakeholder interviews', done: true },
+        { id: 'D2', text: 'Feature spec document', done: true },
+      ] },
+      { id: 'M2', title: 'Portal design', status: 'Done', deliverables: [
+        { id: 'D3', text: 'Wireframes approved', done: true },
+        { id: 'D4', text: 'Visual design mockups', done: true },
+      ] },
+      { id: 'M3', title: 'Booking flow', status: 'Done', deliverables: [
+        { id: 'D5', text: 'Container search & booking', done: true },
+        { id: 'D6', text: 'Booking confirmation emails', done: true },
+      ] },
+      { id: 'M4', title: 'Invoicing module', status: 'InProgress', deliverables: [
+        { id: 'D7', text: 'Invoice generation', done: true },
+        { id: 'D8', text: 'PDF export', done: false },
+        { id: 'D9', text: 'Payment reconciliation', done: false },
+      ] },
     ],
   },
   { 
@@ -246,10 +300,22 @@ export const MOCK_PROJECTS: Project[] = [
     status: 'On Hold',
     createdAt: '2026-06-20',
     milestones: [
-      { id: 'M1', title: 'Research', status: 'Done' },
-      { id: 'M2', title: 'Rate engine', status: 'Todo' },
-      { id: 'M3', title: 'API integration', status: 'Todo' },
-      { id: 'M4', title: 'Testing', status: 'Todo' },
+      { id: 'M1', title: 'Research', status: 'Done', deliverables: [
+        { id: 'D1', text: 'Market rate analysis', done: true },
+        { id: 'D2', text: 'Carrier API survey', done: true },
+      ] },
+      { id: 'M2', title: 'Rate engine', status: 'Todo', deliverables: [
+        { id: 'D3', text: 'Rate calculation logic', done: false },
+        { id: 'D4', text: 'Surge pricing model', done: false },
+      ] },
+      { id: 'M3', title: 'API integration', status: 'Todo', deliverables: [
+        { id: 'D5', text: 'Carrier API connectors', done: false },
+        { id: 'D6', text: 'Webhook handlers', done: false },
+      ] },
+      { id: 'M4', title: 'Testing', status: 'Todo', deliverables: [
+        { id: 'D7', text: 'Unit test suite', done: false },
+        { id: 'D8', text: 'Integration test harness', done: false },
+      ] },
     ],
   },
   { 
@@ -263,12 +329,30 @@ export const MOCK_PROJECTS: Project[] = [
     status: 'In Progress',
     createdAt: '2026-06-11',
     milestones: [
-      { id: 'M1', title: 'Discovery', status: 'Done' },
-      { id: 'M2', title: 'Tracking UI', status: 'InProgress', deadline: '2026-08-10' },
-      { id: 'M3', title: 'Notifications', status: 'Todo' },
-      { id: 'M4', title: 'Live map', status: 'Todo' },
-      { id: 'M5', title: 'Beta test', status: 'Todo' },
-      { id: 'M6', title: 'Launch', status: 'Todo' },
+      { id: 'M1', title: 'Discovery', status: 'Done', deliverables: [
+        { id: 'D1', text: 'User interviews', done: true },
+        { id: 'D2', text: 'Feature prioritization', done: true },
+      ] },
+      { id: 'M2', title: 'Tracking UI', status: 'InProgress', deadline: '2026-08-10', deliverables: [
+        { id: 'D3', text: 'Package list view', done: true },
+        { id: 'D4', text: 'Tracking detail screen', done: false },
+      ] },
+      { id: 'M3', title: 'Notifications', status: 'Todo', deliverables: [
+        { id: 'D5', text: 'Push notification setup', done: false },
+        { id: 'D6', text: 'Email digest', done: false },
+      ] },
+      { id: 'M4', title: 'Live map', status: 'Todo', deliverables: [
+        { id: 'D7', text: 'Mapbox integration', done: false },
+        { id: 'D8', text: 'Marker clustering', done: false },
+      ] },
+      { id: 'M5', title: 'Beta test', status: 'Todo', deliverables: [
+        { id: 'D9', text: 'Beta invite flow', done: false },
+        { id: 'D10', text: 'Feedback collection', done: false },
+      ] },
+      { id: 'M6', title: 'Launch', status: 'Todo', deliverables: [
+        { id: 'D11', text: 'App store submission', done: false },
+        { id: 'D12', text: 'Landing page', done: false },
+      ] },
     ],
   },
   { 
@@ -282,10 +366,22 @@ export const MOCK_PROJECTS: Project[] = [
     status: 'In Progress',
     createdAt: '2026-07-08',
     milestones: [
-      { id: 'M1', title: 'Fleet data model', status: 'Done' },
-      { id: 'M2', title: 'Dashboard wireframe', status: 'Done' },
-      { id: 'M3', title: 'Telemetry feed', status: 'InProgress' },
-      { id: 'M4', title: 'Admin views', status: 'Todo' },
+      { id: 'M1', title: 'Fleet data model', status: 'Done', deliverables: [
+        { id: 'D1', text: 'Entity relationship diagram', done: true },
+        { id: 'D2', text: 'Database schema', done: true },
+      ] },
+      { id: 'M2', title: 'Dashboard wireframe', status: 'Done', deliverables: [
+        { id: 'D3', text: 'Wireframe mockups', done: true },
+        { id: 'D4', text: 'Stakeholder approval', done: true },
+      ] },
+      { id: 'M3', title: 'Telemetry feed', status: 'InProgress', deliverables: [
+        { id: 'D5', text: 'Real-time data pipeline', done: true },
+        { id: 'D6', text: 'Historical data aggregation', done: false },
+      ] },
+      { id: 'M4', title: 'Admin views', status: 'Todo', deliverables: [
+        { id: 'D7', text: 'Fleet overview table', done: false },
+        { id: 'D8', text: 'Vehicle detail page', done: false },
+      ] },
     ],
   },
   { 
@@ -300,10 +396,22 @@ export const MOCK_PROJECTS: Project[] = [
     createdAt: '2026-04-15',
     completedAt: '2026-08-12',
     milestones: [
-      { id: 'M1', title: 'Design', status: 'Done' },
-      { id: 'M2', title: 'Build', status: 'Done' },
-      { id: 'M3', title: 'Content', status: 'Done' },
-      { id: 'M4', title: 'Launch', status: 'Done' },
+      { id: 'M1', title: 'Design', status: 'Done', deliverables: [
+        { id: 'D1', text: 'Visual design system', done: true },
+        { id: 'D2', text: 'Responsive layouts', done: true },
+      ] },
+      { id: 'M2', title: 'Build', status: 'Done', deliverables: [
+        { id: 'D3', text: 'Frontend implementation', done: true },
+        { id: 'D4', text: 'CMS integration', done: true },
+      ] },
+      { id: 'M3', title: 'Content', status: 'Done', deliverables: [
+        { id: 'D5', text: 'Copywriting', done: true },
+        { id: 'D6', text: 'Photography & assets', done: true },
+      ] },
+      { id: 'M4', title: 'Launch', status: 'Done', deliverables: [
+        { id: 'D7', text: 'DNS cutover', done: true },
+        { id: 'D8', text: 'Post-launch QA', done: true },
+      ] },
     ],
   },
   { 
@@ -318,9 +426,18 @@ export const MOCK_PROJECTS: Project[] = [
     createdAt: '2026-06-24',
     completedAt: '2026-08-05',
     milestones: [
-      { id: 'M1', title: 'Key setup', status: 'Done' },
-      { id: 'M2', title: 'Integration', status: 'Done' },
-      { id: 'M3', title: 'Handover', status: 'Done' },
+      { id: 'M1', title: 'Key setup', status: 'Done', deliverables: [
+        { id: 'D1', text: 'API key provisioning', done: true },
+        { id: 'D2', text: 'Auth token rotation', done: true },
+      ] },
+      { id: 'M2', title: 'Integration', status: 'Done', deliverables: [
+        { id: 'D3', text: 'SDK integration', done: true },
+        { id: 'D4', text: 'Webhook registration', done: true },
+      ] },
+      { id: 'M3', title: 'Handover', status: 'Done', deliverables: [
+        { id: 'D5', text: 'Documentation', done: true },
+        { id: 'D6', text: 'Team training session', done: true },
+      ] },
     ],
   },
   { 
@@ -334,9 +451,18 @@ export const MOCK_PROJECTS: Project[] = [
     status: 'Cancelled',
     createdAt: '2026-05-30',
     milestones: [
-      { id: 'M1', title: 'Rate analysis', status: 'Done' },
-      { id: 'M2', title: 'New card build', status: 'Todo' },
-      { id: 'M3', title: 'Client sign-off', status: 'Todo' },
+      { id: 'M1', title: 'Rate analysis', status: 'Done', deliverables: [
+        { id: 'D1', text: 'Competitor rate audit', done: true },
+        { id: 'D2', text: 'Margin analysis', done: true },
+      ] },
+      { id: 'M2', title: 'New card build', status: 'Todo', deliverables: [
+        { id: 'D3', text: 'Card layout design', done: false },
+        { id: 'D4', text: 'Rate table population', done: false },
+      ] },
+      { id: 'M3', title: 'Client sign-off', status: 'Todo', deliverables: [
+        { id: 'D5', text: 'Client review meeting', done: false },
+        { id: 'D6', text: 'Approved rate card', done: false },
+      ] },
     ],
   },
   { 
@@ -350,9 +476,18 @@ export const MOCK_PROJECTS: Project[] = [
     status: 'Archived',
     createdAt: '2025-11-10',
     milestones: [
-      { id: 'M1', title: 'Scoping', status: 'Done' },
-      { id: 'M2', title: 'Build', status: 'Done' },
-      { id: 'M3', title: 'Handover', status: 'Done' },
+      { id: 'M1', title: 'Scoping', status: 'Done', deliverables: [
+        { id: 'D1', text: 'Requirements gathering', done: true },
+        { id: 'D2', text: 'Technical feasibility', done: true },
+      ] },
+      { id: 'M2', title: 'Build', status: 'Done', deliverables: [
+        { id: 'D3', text: 'Portal frontend', done: true },
+        { id: 'D4', text: 'Backend API', done: true },
+      ] },
+      { id: 'M3', title: 'Handover', status: 'Done', deliverables: [
+        { id: 'D5', text: 'Admin documentation', done: true },
+        { id: 'D6', text: 'Client walkthrough', done: true },
+      ] },
     ],
   }
 ];
@@ -514,10 +649,10 @@ Any work not listed above is out of scope and is quoted before it is started. Wo
 };
 
 export const MOCK_NOTIFICATIONS = [
-  { id: '1', title: 'Scope #88211 Approved', message: 'Client Acme Corp has approved the redesign scope.', time: '2h ago', type: 'success', category: 'Approvals', unread: true, actionLabel: 'View Scope', iconName: 'check' },
-  { id: '2', title: 'New Quote Requested # Nexus', message: 'Nexus Logistics is asking for a quote on cloud migration.', time: '4h ago', type: 'info', category: 'New Scopes', unread: true, actionLabel: 'Draft Scope', iconName: 'eye' },
-  { id: '3', title: 'Payment Received #88213', message: 'Payment of $14,250.00 confirmed for Meridian Shipping.', time: 'Yesterday', type: 'success', category: 'Payments', unread: false, actionLabel: 'View Settlement', iconName: 'credit-card' },
-  { id: '4', title: 'Scope #88215 Expired', message: 'Velocity Logistics scope has reached its expiration date.', time: '2 days ago', type: 'warning', category: 'Deadline Approaching', unread: true, actionLabel: 'Re-send', iconName: 'alert' }
+  { id: '1', title: 'Scope #88211 Approved', message: 'Client Acme Corp has approved the redesign scope.', time: '2h ago', type: 'success', category: 'Approvals', unread: true, actionLabel: 'View Scope', iconName: 'check', projectId: 'PRJ-1001' },
+  { id: '2', title: 'New Quote Requested # Nexus', message: 'Nexus Logistics is asking for a quote on cloud migration.', time: '4h ago', type: 'info', category: 'New Scopes', unread: true, actionLabel: 'Draft Scope', iconName: 'eye', projectId: 'PRJ-1002' },
+  { id: '3', title: 'Payment Received #88213', message: 'Payment of $14,250.00 confirmed for Meridian Shipping.', time: 'Yesterday', type: 'success', category: 'Payments', unread: false, actionLabel: 'View Settlement', iconName: 'credit-card', projectId: 'PRJ-1003' },
+  { id: '4', title: 'Scope #88215 Expired', message: 'Velocity Logistics scope has reached its expiration date.', time: '2 days ago', type: 'warning', category: 'Deadline Approaching', unread: true, actionLabel: 'Re-send', iconName: 'alert', projectId: 'PRJ-1005' }
 ];
 
 /**
@@ -552,3 +687,19 @@ export const MOCK_ATTENTION_ITEMS: AttentionItem[] = [
     details: 'Tracking UI · Due Aug 10',
   },
 ];
+
+export const MOCK_MESSAGES: Record<string, RoomMessage[]> = {
+  'PRJ-1001': [
+    { id: 'MSG-1', projectId: 'PRJ-1001', sender: 'client', text: 'Hey! Is the dark mode still possible this week?', time: '2:14 PM' },
+    { id: 'MSG-2', projectId: 'PRJ-1001', sender: 'freelancer', text: 'It is — I’ll send you a quote for the extra scope today.', time: '2:31 PM' },
+  ],
+};
+
+export const MOCK_ACTIVITY: Record<string, ActivityEvent[]> = {
+  'PRJ-1001': [
+    { id: 'ACT-1', projectId: 'PRJ-1001', type: 'milestone', title: 'Brand guidelines marked Done', description: 'Milestone completed', time: '3h ago' },
+    { id: 'ACT-2', projectId: 'PRJ-1001', type: 'scope-check', title: 'AI scope check on "Dark mode"', description: 'Classified as Out of Scope', time: '1d ago' },
+    { id: 'ACT-3', projectId: 'PRJ-1001', type: 'change-request', title: 'Change request added: "Onboarding email sequence"', time: '2d ago' },
+    { id: 'ACT-4', projectId: 'PRJ-1001', type: 'client-decision', title: 'Client accepted "Onboarding email sequence"', time: '2d ago' },
+  ],
+};

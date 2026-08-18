@@ -3,16 +3,29 @@ import { AnimatePresence, motion } from 'motion/react';
 import {
   Plus, Users, Copy, Link2, MoreHorizontal, CheckCircle2, Circle, CircleDashed,
   ChevronDown, ChevronUp, Pencil, Trash2, X, Clock, Banknote, FileText,
-  CalendarDays, Check, RotateCcw, Archive, ShieldCheck, Inbox,
+  CalendarDays, Check, RotateCcw, Archive, ShieldCheck, Inbox, Bot, Send,
+  Activity as ActivityIcon,
 } from 'lucide-react';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { MOCK_CLIENTS, CLIENT_ROOM_TOKENS } from '../lib/mockData';
 import {
-  MOCK_CLIENTS, MOCK_PROJECTS, MOCK_CHANGE_REQUESTS, MOCK_CONTRACT_SECTIONS,
-  CLIENT_ROOM_TOKENS, MOCK_ORIGINAL_CONTRACT,
-} from '../lib/mockData';
+  addChangeRequest as pushChangeRequest,
+  addMessage,
+  deleteProject,
+  logActivity,
+  setContractSections,
+  updateChangeRequest,
+  updateProject,
+  useActivity,
+  useChangeRequests,
+  useContractSections,
+  useOriginalContract,
+  useProject,
+} from '../lib/appStore';
+import { runFakeScopeCheck } from '../lib/fakeAi';
 import {
-  ChangeRequest, ChangeRequestStatus, ChangeScopeDecision, ContractSection,
-  Milestone, ProjectStatus,
+  ChangeRequest, ChangeRequestStatus, ChangeScopeDecision,
+  ContractSection, Milestone, ProjectStatus,
 } from '../types';
 
 const DAY_MS = 1000 * 60 * 60 * 24;
@@ -128,6 +141,93 @@ function Select({ value, onChange, options }: { value: string; onChange: (v: str
   );
 }
 
+function DeliverablesEditor({
+  deliverables,
+  onAdd,
+  onEdit,
+  onRemove,
+}: {
+  deliverables: string[];
+  onAdd: (inputRef: React.RefObject<HTMLInputElement | null>) => void;
+  onEdit: (index: number, newText: string) => void;
+  onRemove: (index: number) => void;
+}) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [editingIdx, setEditingIdx] = React.useState<number | null>(null);
+  const [editText, setEditText] = React.useState('');
+
+  const handleAdd = () => {
+    onAdd(inputRef);
+    inputRef.current?.focus();
+  };
+
+  return (
+    <Field label="Deliverables">
+      <div className="border border-surface-container-highest rounded-xl overflow-hidden">
+        {deliverables.length > 0 && (
+          <ul className="divide-y divide-surface-container-highest">
+            {deliverables.map((text, i) => (
+              <li key={i} className="flex items-center gap-2 px-3 py-2.5 bg-surface-container-lowest group">
+                {editingIdx === i ? (
+                  <input
+                    autoFocus
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && editText.trim()) { onEdit(i, editText.trim()); setEditingIdx(null); }
+                      if (e.key === 'Escape') setEditingIdx(null);
+                    }}
+                    onBlur={() => { if (editText.trim()) onEdit(i, editText.trim()); setEditingIdx(null); }}
+                    className="flex-1 text-sm bg-white/5 border border-primary/40 rounded-lg px-2.5 py-1 text-on-surface outline-none"
+                  />
+                ) : (
+                  <span className="flex-1 text-sm text-on-surface truncate">{text}</span>
+                )}
+                <div className="flex items-center gap-0.5 shrink-0">
+                  {editingIdx !== i && (
+                    <button
+                      type="button"
+                      onClick={() => { setEditingIdx(i); setEditText(text); }}
+                      className="p-1 rounded-md hover:bg-surface-container text-secondary opacity-0 group-hover:opacity-100 transition-all"
+                      title="Edit"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => onRemove(i)}
+                    className="p-1 rounded-md hover:bg-surface-container text-secondary hover:text-error opacity-0 group-hover:opacity-100 transition-all"
+                    title="Remove"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="flex items-center gap-2 px-3 py-2.5 bg-surface-container-low border-t border-surface-container-highest">
+          <input
+            ref={inputRef}
+            placeholder="Add a deliverable..."
+            className="flex-1 text-sm bg-transparent outline-none text-on-surface placeholder:text-secondary"
+            onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
+          />
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="p-1.5 rounded-lg hover:bg-surface-container text-primary transition-colors"
+            title="Add deliverable"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </Field>
+  );
+}
+
 function Modal({
   title, subtitle, wide, onClose, children,
 }: {
@@ -165,28 +265,32 @@ function Modal({
  * PROJECT VIEW
  *
  * The freelancer's workspace for a single project: milestones, change requests,
- * contract details and the client room. Everything is UI-only against mock data —
- * local state handles expansion, status changes and mock CRUD.
+ * contract details, the client room and the activity feed. Backed by the shared
+ * store so the client room and dashboard stay in sync. AI scope checks and
+ * client messaging are simulated with fake data — no real API calls.
  */
-export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBack: () => void }) {
-  const source = MOCK_PROJECTS.find((p) => p.id === projectId);
-  const [projectMeta, setProjectMeta] = useState(source!);
-  const [milestones, setMilestones] = useState<Milestone[]>(source?.milestones ?? []);
-  const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>(
-    MOCK_CHANGE_REQUESTS.filter((c) => c.projectId === projectId)
-  );
-  const [contractSections, setContractSections] = useState<ContractSection[]>(MOCK_CONTRACT_SECTIONS);
-  const [roomToken, setRoomToken] = useState(CLIENT_ROOM_TOKENS[projectId] ?? 'xxxxxxxxxxxx');
+export function ProjectViewPage({ projectId, onBack, onOpenRoom }: { projectId: string; onBack: () => void; onOpenRoom?: (id: string) => void }) {
+  const projectMeta = useProject(projectId);
+  const changeRequests = useChangeRequests(projectId);
+  const contractSections = useContractSections(projectId);
+  const originalContract = useOriginalContract(projectId);
+  const activity = useActivity(projectId);
 
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<ModalKind>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const [modalDeliverables, setModalDeliverables] = useState<string[]>([]);
+  const [editingDeliverable, setEditingDeliverable] = useState<{ milestoneId: string; deliverableId: string } | null>(null);
+  const [editingDeliverableText, setEditingDeliverableText] = useState('');
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
+  const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const [crTab, setCrTab] = useState<CrTab>('all');
   const [copied, setCopied] = useState(false);
+  const [roomToken] = useState(CLIENT_ROOM_TOKENS[projectId] ?? 'xxxxxxxxxxxx');
+  const [checking, setChecking] = useState<string | null>(null);
 
-  if (!source) {
+  if (!projectMeta) {
     return (
       <div className="max-w-7xl mx-auto pt-2 pb-8">
         <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-12 text-center shadow-sm">
@@ -202,6 +306,11 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
   const client = MOCK_CLIENTS.find((c) => c.id === projectMeta.clientId);
   const clientName = client?.name ?? 'Unknown';
   const totalValue = projectMeta.basePrice + projectMeta.outOfScopeAdded;
+
+  const milestones = projectMeta.milestones;
+  const setMilestones = (updater: (prev: Milestone[]) => Milestone[]) => {
+    updateProject(projectId, { milestones: updater(milestones) });
+  };
 
   const done = milestones.filter((m) => m.status === 'Done').length;
   const total = milestones.length;
@@ -231,11 +340,13 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
 
   const openAddMilestone = () => {
     setDraft({ title: '', description: '', deadline: '' });
+    setModalDeliverables([]);
     setModal({ kind: 'add-milestone' });
   };
 
   const openEditMilestone = (m: Milestone) => {
     setDraft({ title: m.title, description: m.description ?? '', deadline: m.deadline ?? '' });
+    setModalDeliverables(m.deliverables?.map((d) => d.text) ?? []);
     setModal({ kind: 'edit-milestone', milestone: m });
   };
 
@@ -250,7 +361,7 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
         description: draft.description?.trim() || undefined,
         deadline: draft.deadline || undefined,
         status: 'Todo',
-        deliverables: [],
+        deliverables: modalDeliverables.filter((t) => t.trim()).map((text, i) => ({ id: `D-${Date.now()}-${i}`, text: text.trim(), done: false })),
       },
     ]);
     closeModal();
@@ -259,6 +370,12 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
   const updateMilestone = () => {
     if (!modal || modal.kind !== 'edit-milestone') return;
     const id = modal.milestone.id;
+    const existing = modal.milestone.deliverables ?? [];
+    const filtered = modalDeliverables.filter((t) => t.trim());
+    const newDeliverables = filtered.map((text, i) => {
+      const match = existing.find((d) => d.text.trim() === text.trim());
+      return match ?? { id: `D-${Date.now()}-${i}`, text: text.trim(), done: false };
+    });
     setMilestones((prev) =>
       prev.map((m) =>
         m.id === id
@@ -267,6 +384,7 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
               title: draft.title?.trim() || m.title,
               description: draft.description?.trim() || undefined,
               deadline: draft.deadline || undefined,
+              deliverables: newDeliverables,
             }
           : m
       )
@@ -293,19 +411,72 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
     if (!modal || modal.kind !== 'add-deliverable') return;
     const value = draft.deliverable?.trim();
     if (!value) return;
+    const newDeliverable = { id: `D-${Date.now()}`, text: value, done: false };
     setMilestones((prev) =>
-      prev.map((m) => (m.id === modal.milestoneId ? { ...m, deliverables: [...(m.deliverables ?? []), value] } : m))
+      prev.map((m) => (m.id === modal.milestoneId ? { ...m, deliverables: [...(m.deliverables ?? []), newDeliverable] } : m))
     );
     closeModal();
   };
 
-  const removeDeliverable = (milestoneId: string, index: number) => {
+  const removeDeliverable = (milestoneId: string, deliverableId: string) => {
     setMilestones((prev) =>
       prev.map((m) =>
         m.id === milestoneId
-          ? { ...m, deliverables: (m.deliverables ?? []).filter((_, i) => i !== index) }
+          ? { ...m, deliverables: (m.deliverables ?? []).filter((d) => d.id !== deliverableId) }
           : m
       )
+    );
+  };
+
+  const modalAddDeliverable = (inputRef: React.RefObject<HTMLInputElement | null>) => {
+    const text = inputRef.current?.value?.trim();
+    if (!text) return;
+    setModalDeliverables((prev) => [...prev, text]);
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  const modalEditDeliverable = (index: number, newText: string) => {
+    setModalDeliverables((prev) => prev.map((t, i) => (i === index ? newText : t)));
+  };
+
+  const modalRemoveDeliverable = (index: number) => {
+    setModalDeliverables((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const startInlineEditDeliverable = (milestoneId: string, deliverableId: string, currentText: string) => {
+    setEditingDeliverable({ milestoneId, deliverableId });
+    setEditingDeliverableText(currentText);
+  };
+
+  const saveInlineDeliverable = () => {
+    if (!editingDeliverable) return;
+    const text = editingDeliverableText.trim();
+    if (!text) { setEditingDeliverable(null); return; }
+    setMilestones((prev) =>
+      prev.map((m) =>
+        m.id === editingDeliverable.milestoneId
+          ? { ...m, deliverables: (m.deliverables ?? []).map((d) => (d.id === editingDeliverable.deliverableId ? { ...d, text } : d)) }
+          : m
+      )
+    );
+    setEditingDeliverable(null);
+  };
+
+  const cancelInlineEditDeliverable = () => {
+    setEditingDeliverable(null);
+  };
+
+  const toggleDeliverable = (milestoneId: string, deliverableId: string) => {
+    setMilestones((prev) =>
+      prev.map((m) => {
+        if (m.id !== milestoneId) return m;
+        const deliverables = (m.deliverables ?? []).map((d) =>
+          d.id === deliverableId ? { ...d, done: !d.done } : d
+        );
+        const allDone = deliverables.length > 0 && deliverables.every((d) => d.done);
+        const status = allDone ? 'Done' : m.status === 'Done' ? 'InProgress' : m.status;
+        return { ...m, deliverables, status };
+      })
     );
   };
 
@@ -337,8 +508,46 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
       priceAdjustment: Number(draft.priceAdjustment) || 0,
       dateRequested: new Date().toISOString().slice(0, 10),
     };
-    setChangeRequests((prev) => [request, ...prev]);
+    pushChangeRequest(request);
+    updateProject(projectMeta.id, { pendingOutOfScopeRequests: projectMeta.pendingOutOfScopeRequests + 1 });
+    logActivity(projectMeta.id, {
+      type: 'change-request',
+      title: `Change request added: "${title}"`,
+      description: draft.description?.trim() || undefined,
+    });
     closeModal();
+  };
+
+  const runScopeCheck = (cr: ChangeRequest) => {
+    setChecking(cr.id);
+    runFakeScopeCheck().then((result) => {
+      updateChangeRequest(cr.id, { scopeDecision: result.decision });
+      logActivity(projectMeta.id, {
+        type: 'scope-check',
+        title: `AI scope check on "${cr.title}"`,
+        description: `Classified as ${result.decision} · ${Math.round(result.confidence * 100)}% confidence`,
+      });
+      setChecking(null);
+    });
+  };
+
+  const sendToClient = (cr: ChangeRequest) => {
+    updateChangeRequest(cr.id, { status: 'Sent' });
+    updateProject(projectMeta.id, {
+      pendingOutOfScopeRequests: Math.max(0, projectMeta.pendingOutOfScopeRequests - 1),
+    });
+    logActivity(projectMeta.id, {
+      type: 'request-submitted',
+      title: `Sent "${cr.title}" to the client room`,
+      description: `+$${cr.priceAdjustment.toLocaleString('en-US')} · +${cr.extraTimeDays}d`,
+    });
+    addMessage({
+      id: `MSG-${Date.now()}`,
+      projectId: projectMeta.id,
+      sender: 'freelancer',
+      text: `I sent you "${cr.title}" for approval — you can review it in the room.`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    });
   };
 
   // --- Contract sections ---------------------------------------------------
@@ -358,22 +567,20 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
     const items = (draft.items ?? '').split('\n').map((s) => s.trim()).filter(Boolean);
     if (modal?.kind === 'edit-contract-section') {
       const id = modal.section.id;
-      setContractSections((prev) => prev.map((s) => (s.id === id ? { ...s, title, items } : s)));
+      setContractSections(projectId, contractSections.map((s) => (s.id === id ? { ...s, title, items } : s)));
     } else {
-      setContractSections((prev) => [...prev, { id: `sec-${Date.now()}`, title, items }]);
+      setContractSections(projectId, [...contractSections, { id: `sec-${Date.now()}`, title, items }]);
     }
     closeModal();
   };
 
   const moveSection = (id: string, dir: -1 | 1) => {
-    setContractSections((prev) => {
-      const idx = prev.findIndex((s) => s.id === id);
-      const target = idx + dir;
-      if (idx < 0 || target < 0 || target >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[target]] = [next[target], next[idx]];
-      return next;
-    });
+    const idx = contractSections.findIndex((s) => s.id === id);
+    const target = idx + dir;
+    if (idx < 0 || target < 0 || target >= contractSections.length) return;
+    const next = [...contractSections];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    setContractSections(projectId, next);
   };
 
   const confirmDeleteSection = (s: ContractSection) => {
@@ -382,21 +589,49 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
       message: 'The section and its items will be removed from the working contract.',
       isDestructive: true,
       confirmText: 'Delete section',
-      onConfirm: () => setContractSections((prev) => prev.filter((x) => x.id !== s.id)),
+      onConfirm: () => setContractSections(projectId, contractSections.filter((x) => x.id !== s.id)),
     });
   };
 
   const removeSectionItem = (sectionId: string, index: number) => {
-    setContractSections((prev) =>
-      prev.map((s) => (s.id === sectionId ? { ...s, items: s.items.filter((_, i) => i !== index) } : s))
+    setContractSections(
+      projectId,
+      contractSections.map((s) => (s.id === sectionId ? { ...s, items: s.items.filter((_, i) => i !== index) } : s))
     );
   };
 
   // --- Project / room ------------------------------------------------------
+  const STATUS_CONFIRMATIONS: Partial<Record<ProjectStatus, { title: string; message: string }>> = {
+    'Completed': { title: 'Mark as Completed?', message: 'This marks all remaining work as done. The project moves to History.' },
+    'Cancelled': { title: 'Cancel this project?', message: 'The project moves to History and disappears from the dashboard.' },
+    'Archived': { title: 'Archive this project?', message: 'The project moves to History and disappears from the dashboard. The client room stays live.' },
+  };
+
+  const changeStatus = (newStatus: string) => {
+    const status = newStatus as ProjectStatus;
+    const confirmMsg = STATUS_CONFIRMATIONS[status];
+    if (confirmMsg) {
+      setConfirm({
+        title: confirmMsg.title,
+        message: confirmMsg.message,
+        isDestructive: status === 'Cancelled',
+        confirmText: `Set to ${status}`,
+        onConfirm: () => {
+          updateProject(projectMeta.id, { status });
+          logActivity(projectMeta.id, { type: 'project-created', title: `Status changed to ${status}` });
+        },
+      });
+      // Revert the dropdown immediately; the confirm callback will re-apply
+      return;
+    }
+    updateProject(projectMeta.id, { status });
+    logActivity(projectMeta.id, { type: 'project-created', title: `Status changed to ${status}` });
+  };
+
   const openEditProject = () => {
     setDraft({
       name: projectMeta.name,
-      status: projectMeta.status,
+      clientId: projectMeta.clientId,
       deadline: projectMeta.deadline ?? '',
       basePrice: String(projectMeta.basePrice),
     });
@@ -404,13 +639,13 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
   };
 
   const saveProject = () => {
-    setProjectMeta((p) => ({
-      ...p,
-      name: draft.name?.trim() || p.name,
-      status: (draft.status as ProjectStatus) || p.status,
+    updateProject(projectMeta.id, {
+      name: draft.name?.trim() || projectMeta.name,
+      clientId: draft.clientId || projectMeta.clientId,
       deadline: draft.deadline || undefined,
-      basePrice: Number(draft.basePrice) || p.basePrice,
-    }));
+      basePrice: Number(draft.basePrice) || projectMeta.basePrice,
+    });
+    logActivity(projectMeta.id, { type: 'project-created', title: 'Project details updated' });
     closeModal();
   };
 
@@ -420,7 +655,10 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
       message: 'The project moves to Project History and disappears from the dashboard. The client room stays live.',
       isDestructive: false,
       confirmText: 'Archive project',
-      onConfirm: () => {},
+      onConfirm: () => {
+        updateProject(projectMeta.id, { status: 'Archived' });
+        logActivity(projectMeta.id, { type: 'project-created', title: `Project archived (${projectMeta.name})` });
+      },
     });
   };
 
@@ -430,7 +668,10 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
       message: 'All milestones, change requests and room history will be permanently removed. This cannot be undone.',
       isDestructive: true,
       confirmText: 'Delete project',
-      onConfirm: () => {},
+      onConfirm: () => {
+        deleteProject(projectMeta.id);
+        onBack();
+      },
     });
   };
 
@@ -451,8 +692,11 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
       isDestructive: false,
       confirmText: 'Regenerate link',
       onConfirm: () => {
-        setRoomToken(Math.random().toString(36).slice(2, 10));
         setCopied(false);
+        logActivity(projectMeta.id, {
+          type: 'project-created',
+          title: 'Client room link regenerated',
+        });
       },
     });
   };
@@ -484,10 +728,10 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
 
   return (
     <div className="max-w-7xl mx-auto pt-2 pb-8">
-      {/* Project header */}
+      {/* Project summary — header + progress combined */}
       <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-7 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">{projectMeta.name}</h1>
               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${PROJECT_STATUS_META[projectMeta.status]}`}>
@@ -518,18 +762,13 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
           </div>
         </div>
 
-        <div className="mt-6 pt-6 border-t border-surface-container-highest flex flex-wrap items-center gap-2.5">
-          <button onClick={openAddMilestone} className={btnGhost}>
-            <Plus className="w-4 h-4" />Add Milestone
-          </button>
+        {/* Actions */}
+        <div className="mt-5 pt-5 border-t border-surface-container-highest flex flex-wrap items-center gap-2.5">
           <button onClick={openAddChangeRequest} className={btnGhost}>
             <Plus className="w-4 h-4" />Add Change Request
           </button>
-          <button
-            onClick={() => document.getElementById('client-room')?.scrollIntoView({ behavior: 'smooth' })}
-            className={btnPrimary}
-          >
-            <Users className="w-4 h-4" />Client Room
+          <button onClick={() => onOpenRoom(projectId)} className={btnPrimary}>
+            <Users className="w-4 h-4" />Open Client Room
           </button>
           <button
             onClick={copyRoomLink}
@@ -539,6 +778,57 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
             <Link2 className="w-4 h-4" />
           </button>
 
+          {/* Status dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setStatusMenuOpen((o) => !o)}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-surface-container-highest bg-surface-container-lowest text-sm font-medium text-on-surface hover:bg-surface-container transition-colors"
+            >
+              <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                projectMeta.status === 'In Progress' ? 'bg-primary' :
+                projectMeta.status === 'On Hold' ? 'bg-amber-500' :
+                projectMeta.status === 'Completed' ? 'bg-emerald-600' :
+                projectMeta.status === 'Cancelled' ? 'bg-error' :
+                'bg-secondary'
+              }`} />
+              Status
+              <ChevronDown className={`w-3.5 h-3.5 text-secondary transition-transform ${statusMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {statusMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setStatusMenuOpen(false)} />
+                <div className="absolute right-0 top-full mt-2 z-50 w-56 bg-surface-container-lowest border border-surface-container-highest rounded-xl shadow-xl overflow-hidden">
+                  <p className="px-4 pt-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-secondary">Change status</p>
+                  {PROJECT_STATUSES.map((s) => {
+                    const isActive = s === projectMeta.status;
+                    const dotColor =
+                      s === 'In Progress' ? 'bg-primary' :
+                      s === 'On Hold' ? 'bg-amber-500' :
+                      s === 'Completed' ? 'bg-emerald-600' :
+                      s === 'Cancelled' ? 'bg-error' :
+                      'bg-secondary';
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => { setStatusMenuOpen(false); changeStatus(s); }}
+                        className={`w-full text-left px-4 py-2.5 flex items-center gap-3 text-sm transition-colors ${
+                          isActive
+                            ? 'bg-primary/8 text-primary font-semibold'
+                            : 'text-on-surface hover:bg-surface-container'
+                        }`}
+                      >
+                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotColor}`} />
+                        <span className="flex-1">{s}</span>
+                        {isActive && <Check className="w-4 h-4 text-primary shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* More actions */}
           <div className="relative">
             <button
               onClick={() => setProjectMenuOpen((o) => !o)}
@@ -577,50 +867,58 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
         </div>
       </div>
 
-      {/* Project progress */}
-      <div className="mt-6 bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="font-button text-on-surface">Project Progress</p>
-          <p className="text-xs text-secondary font-medium">
-            {done} of {total} milestone{total === 1 ? '' : 's'} complete
-          </p>
-        </div>
-        <div className="mt-3 h-2 bg-surface-container-highest rounded-full overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${pct}%` }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="h-full bg-primary rounded-full"
-          />
-        </div>
-      </div>
-
       <div className="mt-10 space-y-14">
         {/* Milestones */}
-        <section>
-          <div className="flex items-center justify-between gap-3 mb-6">
-            <h3 className="font-h3 text-on-surface">Milestones</h3>
-            <span className="text-xs text-secondary font-medium">{done} of {total} done</span>
-          </div>
-
-          {milestones.length === 0 ? (
-            <div className="bg-surface-container-lowest border border-dashed border-surface-container-highest rounded-xl p-10 text-center">
-              <p className="font-medium text-on-surface">No milestones yet.</p>
-              <p className="font-body-sm text-secondary mt-1 mb-5">Add the first one to start tracking progress.</p>
-              <button onClick={openAddMilestone} className={btnPrimary}>
+        <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl shadow-sm overflow-hidden">
+          <div className="p-5 sm:p-7">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <h3 className="font-h3 text-on-surface">Milestones</h3>
+                <span className="text-xs text-secondary font-medium">{done} of {total} done</span>
+              </div>
+              <button onClick={openAddMilestone} className={btnGhostSm}>
                 <Plus className="w-4 h-4" />Add Milestone
               </button>
             </div>
+
+            {/* Overall project progress */}
+            <div className="mt-4 bg-surface-container-low rounded-lg p-3.5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-medium text-secondary">Overall progress</p>
+                <p className="text-xs font-bold text-primary">{pct}%</p>
+              </div>
+              <div className="mt-2 h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                  className="h-full bg-primary rounded-full"
+                />
+              </div>
+            </div>
+          </div>
+
+          {milestones.length === 0 ? (
+            <div className="px-5 sm:px-7 pb-7">
+              <div className="border border-dashed border-surface-container-highest rounded-lg p-10 text-center">
+                <p className="font-medium text-on-surface">No milestones yet.</p>
+                <p className="font-body-sm text-secondary mt-1 mb-5">Add the first one to start tracking progress.</p>
+                <button onClick={openAddMilestone} className={btnPrimary}>
+                  <Plus className="w-4 h-4" />Add Milestone
+                </button>
+              </div>
+            </div>
           ) : (
-            <div className="space-y-3">
+            <div className="px-5 sm:px-7 pb-5 space-y-3">
               {milestones.map((m) => {
                 const meta = MILESTONE_META[m.status];
                 const StatusIcon = meta.icon;
                 const dl = m.deliverables?.length ?? 0;
+                const dlDone = m.deliverables?.filter((d) => d.done).length ?? 0;
                 const deadlineMeta = milestoneDeadlineMeta(m);
                 const isOpen = expanded.has(m.id);
                 return (
-                  <div key={m.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl shadow-sm overflow-hidden">
+                  <div key={m.id} className="bg-surface-container-low border border-surface-container-highest rounded-xl shadow-sm overflow-hidden">
                     <button
                       onClick={() => toggleExpanded(m.id)}
                       className="w-full flex items-center gap-3 sm:gap-4 p-4 sm:px-5 text-left hover:bg-surface transition-colors"
@@ -630,7 +928,7 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
                         <span className="block font-medium text-on-surface truncate">{m.title}</span>
                         <span className="block text-xs mt-0.5">
                           <span className={deadlineMeta.overdue ? 'text-error font-medium' : 'text-secondary'}>{deadlineMeta.due}</span>
-                          <span className="text-secondary"> · {dl} deliverable{dl === 1 ? '' : 's'}</span>
+                          <span className="text-secondary"> · {dl > 0 ? `${dlDone}/${dl} deliverable${dl === 1 ? '' : 's'}` : 'No deliverables'}</span>
                         </span>
                       </span>
                       <span className="hidden sm:inline text-xs font-bold px-2.5 py-1 rounded-full bg-surface-container-low text-secondary">
@@ -657,19 +955,57 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
                               <p className="font-label-caps text-secondary uppercase mb-2">Deliverables</p>
                               {m.deliverables && m.deliverables.length > 0 ? (
                                 <ul className="space-y-1.5">
-                                  {m.deliverables.map((d, i) => (
-                                    <li key={i} className="flex items-center gap-2 group">
-                                      <Check className="w-3.5 h-3.5 text-primary shrink-0" />
-                                      <span className="flex-1 text-sm text-on-surface">{d}</span>
-                                      <button
-                                        onClick={() => removeDeliverable(m.id, i)}
-                                        className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-surface-container text-secondary transition-opacity"
-                                        title="Delete deliverable"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
-                                    </li>
-                                  ))}
+                                  {m.deliverables.map((d) => {
+                                    const isEditing = editingDeliverable?.milestoneId === m.id && editingDeliverable?.deliverableId === d.id;
+                                    return (
+                                      <li key={d.id} className="flex items-center gap-2 group">
+                                        <button
+                                          onClick={() => toggleDeliverable(m.id, d.id)}
+                                          className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
+                                            d.done
+                                              ? 'bg-primary border-primary text-on-primary'
+                                              : 'border-surface-container-highest hover:border-primary/50'
+                                          }`}
+                                          title={d.done ? 'Mark incomplete' : 'Mark complete'}
+                                        >
+                                          {d.done && <Check className="w-2.5 h-2.5" />}
+                                        </button>
+                                        {isEditing ? (
+                                          <input
+                                            autoFocus
+                                            value={editingDeliverableText}
+                                            onChange={(e) => setEditingDeliverableText(e.target.value)}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') saveInlineDeliverable();
+                                              if (e.key === 'Escape') cancelInlineEditDeliverable();
+                                            }}
+                                            onBlur={saveInlineDeliverable}
+                                            className="flex-1 text-sm bg-surface-container-low border border-primary/40 rounded-md px-2 py-0.5 text-on-surface outline-none"
+                                          />
+                                        ) : (
+                                          <span className={`flex-1 text-sm ${d.done ? 'text-secondary line-through' : 'text-on-surface'}`}>{d.text}</span>
+                                        )}
+                                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          {!isEditing && (
+                                            <button
+                                              onClick={() => startInlineEditDeliverable(m.id, d.id, d.text)}
+                                              className="p-1 rounded-md hover:bg-surface-container text-secondary transition-colors"
+                                              title="Edit deliverable"
+                                            >
+                                              <Pencil className="w-3.5 h-3.5" />
+                                            </button>
+                                          )}
+                                          <button
+                                            onClick={() => removeDeliverable(m.id, d.id)}
+                                            className="p-1 rounded-md hover:bg-surface-container text-secondary hover:text-error transition-colors"
+                                            title="Delete deliverable"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      </li>
+                                    );
+                                  })}
                                 </ul>
                               ) : (
                                 <p className="text-sm text-secondary">No deliverables yet.</p>
@@ -812,6 +1148,33 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
                       <Banknote className="w-3.5 h-3.5" />+{formatCurrency(cr.priceAdjustment)}
                     </span>
                   </div>
+
+                  {cr.status === 'Pending' && (
+                    <div className="flex flex-wrap items-center gap-2 pt-2">
+                      <button
+                        onClick={() => runScopeCheck(cr)}
+                        disabled={checking === cr.id}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-surface-container-highest bg-surface-container-low text-on-surface hover:bg-surface-container font-button text-xs shadow-sm transition-colors disabled:opacity-50"
+                      >
+                        {checking === cr.id ? (
+                          <span className="inline-flex items-center gap-1.5 text-secondary">
+                            <span className="w-3 h-3 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+                            Checking…
+                          </span>
+                        ) : (
+                          <>
+                            <Bot className="w-4 h-4 text-primary" />Run AI check
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => sendToClient(cr)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-on-primary hover:opacity-90 font-button text-xs shadow-sm transition-all active:scale-95"
+                      >
+                        <Send className="w-4 h-4" />Send to client
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -908,7 +1271,7 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
         </section>
 
         {/* Client Room */}
-        <section id="client-room" className="scroll-mt-24">
+        <section className="scroll-mt-24">
           <h3 className="font-h3 text-on-surface mb-6">Client Room</h3>
           <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-6 shadow-sm">
             <div className="flex items-start gap-3.5">
@@ -931,6 +1294,11 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
               <button onClick={copyRoomLink} className={`${btnPrimary} shrink-0`}>
                 <Copy className="w-4 h-4" />{copied ? 'Copied' : 'Copy Link'}
               </button>
+              {onOpenRoom && (
+                <button onClick={() => onOpenRoom(projectId)} className={`${btnGhost} shrink-0`}>
+                  <Users className="w-4 h-4" />Open room
+                </button>
+              )}
               <button onClick={confirmRegenerateRoom} className={`${btnGhost} shrink-0`}>
                 <RotateCcw className="w-4 h-4" />Regenerate
               </button>
@@ -941,6 +1309,36 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
               The link uses an unguessable token. Regenerating it immediately invalidates the old one.
             </p>
           </div>
+        </section>
+
+        {/* Activity Feed */}
+        <section>
+          <div className="flex items-center gap-2 mb-6">
+            <ActivityIcon className="w-5 h-5 text-primary" />
+            <h3 className="font-h3 text-on-surface">Activity</h3>
+          </div>
+
+          {activity.length === 0 ? (
+            <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-10 text-center">
+              <p className="font-medium text-on-surface">No activity yet.</p>
+              <p className="font-body-sm text-secondary mt-1">Milestone updates, AI checks and client decisions will show up here.</p>
+            </div>
+          ) : (
+            <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-6 shadow-sm">
+              <ol className="relative border-l border-surface-container-highest ml-2.5 space-y-6">
+                {activity.map((ev) => (
+                  <li key={ev.id} className="ml-5">
+                    <span className="absolute -left-[7px] mt-1 w-3.5 h-3.5 rounded-full bg-primary/20 border-2 border-primary" />
+                    <div className="flex flex-wrap items-center justify-between gap-1">
+                      <p className="text-sm font-medium text-on-surface">{ev.title}</p>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">{ev.time}</span>
+                    </div>
+                    {ev.description && <p className="text-xs text-secondary mt-0.5">{ev.description}</p>}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
         </section>
       </div>
 
@@ -962,6 +1360,12 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
             <Field label="Deadline (optional)">
               <input type="date" className={inputClass} value={draft.deadline ?? ''} onChange={(e) => patch('deadline', e.target.value)} />
             </Field>
+            <DeliverablesEditor
+              deliverables={modalDeliverables}
+              onAdd={modalAddDeliverable}
+              onEdit={modalEditDeliverable}
+              onRemove={modalRemoveDeliverable}
+            />
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={closeModal} className="px-4 py-2.5 font-button text-secondary hover:text-on-surface transition-colors">Cancel</button>
               <button onClick={addMilestone} className={btnPrimary}>Add milestone</button>
@@ -971,7 +1375,7 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
       )}
 
       {modal?.kind === 'edit-milestone' && (
-        <Modal title="Edit Milestone" subtitle="Update the title, description or deadline." onClose={closeModal}>
+        <Modal title="Edit Milestone" subtitle="Update the title, description, deadline, or deliverables." onClose={closeModal}>
           <div className="space-y-4">
             <Field label="Title">
               <input className={inputClass} value={draft.title ?? ''} onChange={(e) => patch('title', e.target.value)} />
@@ -986,6 +1390,12 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
             <Field label="Deadline (optional)">
               <input type="date" className={inputClass} value={draft.deadline ?? ''} onChange={(e) => patch('deadline', e.target.value)} />
             </Field>
+            <DeliverablesEditor
+              deliverables={modalDeliverables}
+              onAdd={modalAddDeliverable}
+              onEdit={modalEditDeliverable}
+              onRemove={modalRemoveDeliverable}
+            />
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={closeModal} className="px-4 py-2.5 font-button text-secondary hover:text-on-surface transition-colors">Cancel</button>
               <button onClick={updateMilestone} className={btnPrimary}>Save changes</button>
@@ -1095,8 +1505,12 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
             <Field label="Project name">
               <input className={inputClass} value={draft.name ?? ''} onChange={(e) => patch('name', e.target.value)} />
             </Field>
-            <Field label="Status">
-              <Select value={draft.status ?? 'In Progress'} onChange={(v) => patch('status', v)} options={PROJECT_STATUSES} />
+            <Field label="Client">
+              <select className={`${inputClass} appearance-none pr-9`} value={draft.clientId ?? ''} onChange={(e) => patch('clientId', e.target.value)}>
+                {MOCK_CLIENTS.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Deadline (optional)">
@@ -1106,6 +1520,7 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
                 <input type="number" min="0" className={inputClass} value={draft.basePrice ?? ''} onChange={(e) => patch('basePrice', e.target.value)} />
               </Field>
             </div>
+            <p className="text-xs text-secondary">Current value is calculated from base price + approved changes and cannot be edited directly.</p>
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={closeModal} className="px-4 py-2.5 font-button text-secondary hover:text-on-surface transition-colors">Cancel</button>
               <button onClick={saveProject} className={btnPrimary}>Save changes</button>
@@ -1126,7 +1541,7 @@ export function ProjectViewPage({ projectId, onBack }: { projectId: string; onBa
             <span>Source text — the working Contract Details above are editable and independent from this.</span>
           </div>
           <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
-            {(MOCK_ORIGINAL_CONTRACT[projectId] ?? '').split('\n\n').filter(Boolean).map((paragraph, i) => (
+            {(originalContract ?? '').split('\n\n').filter(Boolean).map((paragraph, i) => (
               <p key={i} className="text-sm text-on-surface-variant leading-relaxed whitespace-pre-wrap">{paragraph}</p>
             ))}
           </div>

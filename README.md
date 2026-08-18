@@ -22,8 +22,6 @@ This application consists of a standalone React client paired with Tailwind CSS 
 * `Clients.tsx`: Standard CRM-style list view of all clients with pagination.
 * `Notifications.tsx`: Specialized split-view tracking inbox alerts against wider system health processes.
 * `Settings.tsx`: Configuration for organization identity and external API integrations.
-* `CreateChangeOrder.tsx`: The primary logic gate, funneling AI unstructured text into formatted `details`.
-* `PreviewSend.tsx`: Converts `details` into an AI generated string, applying regex to turn raw links into internal React router state bridges.
 * `ApprovalPortal.tsx`: The public-facing client flow, separated entirely from Admin sidebars and context.
 
 ## Development

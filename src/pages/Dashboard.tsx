@@ -4,7 +4,8 @@ import { Briefcase, BadgeCheck, CalendarClock, Inbox, Hourglass, Search, Filter,
 import { PageHeader } from '../components/PageHeader';
 import { SearchableDropdown } from '../components/SearchableDropdown';
 import { StatCard } from '../components/StatCard';
-import { MOCK_CLIENTS, MOCK_PROJECTS, MOCK_SCOPES, MOCK_ATTENTION_ITEMS } from '../lib/mockData';
+import { MOCK_CLIENTS, MOCK_ATTENTION_ITEMS } from '../lib/mockData';
+import { useAllChangeRequests, useProjects } from '../lib/appStore';
 import { AttentionType, Milestone, Project } from '../types';
 
 const DAY_MS = 1000 * 60 * 60 * 24;
@@ -54,14 +55,16 @@ export function DashboardPage({
   onSelectProject?: (projectId: string) => void;
   onViewHistory: () => void;
 }) {
-  const [projects] = useState<Project[]>(MOCK_PROJECTS);
+  const projects = useProjects();
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState({ status: '', deadline: '', client: '' });
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'deadline', direction: 'asc' });
 
+  const allChangeRequests = useAllChangeRequests();
+
   const clientName = (clientId: string) => MOCK_CLIENTS.find((c) => c.id === clientId)?.name ?? 'Unknown';
-  const projectName = (projectId: string) => MOCK_PROJECTS.find((p) => p.id === projectId)?.name ?? 'Unknown';
+  const projectName = (projectId: string) => projects.find((p) => p.id === projectId)?.name ?? 'Unknown';
 
   const attentionItems = MOCK_ATTENTION_ITEMS;
 
@@ -95,8 +98,8 @@ export function DashboardPage({
     [activeProjects]
   );
   const waitingForClient = useMemo(
-    () => MOCK_SCOPES.filter((s) => s.status === 'Sent').length,
-    []
+    () => allChangeRequests.filter((cr) => cr.status === 'Sent').length,
+    [allChangeRequests]
   );
 
   const stats = [
