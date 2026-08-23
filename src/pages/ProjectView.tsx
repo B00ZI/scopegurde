@@ -24,7 +24,7 @@ import {
 } from '../lib/appStore';
 import { runFakeScopeCheck } from '../lib/fakeAi';
 import {
-  ChangeRequest, ChangeRequestStatus, ChangeScopeDecision,
+  ChangeRequest, ChangeRequestStatus, ChangeScopeDecision, RequestStatus,
   ContractSection, Milestone, ProjectStatus,
 } from '../types';
 
@@ -50,30 +50,39 @@ const MILESTONE_STATUS_STYLES: Record<Milestone['status'], string> = {
   Done: 'bg-primary/15 text-primary',
 };
 
-const CR_DECISION_META: Record<ChangeScopeDecision, string> = {
+const CR_SCOPE_META: Record<ChangeScopeDecision, string> = {
   'In Scope': 'bg-primary/10 text-primary border border-primary/20',
   'Needs Review': 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20',
   'Out of Scope': 'bg-secondary/10 text-secondary border border-secondary/20',
 };
 
-const CR_STATUS_META: Record<ChangeRequestStatus, string> = {
-  Pending: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20',
-  Sent: 'bg-secondary/10 text-secondary border border-secondary/20',
-  Accepted: 'bg-primary/10 text-primary border border-primary/20',
-  Rejected: 'bg-error/10 text-error border border-error/20',
+const REQUEST_STATUS_META: Record<RequestStatus, string> = {
+  'Needs Review': 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20',
+  'Reviewed': 'bg-primary/10 text-primary border border-primary/20',
+  'Resolved': 'bg-surface-container text-secondary border border-surface-container-highest',
+};
+
+const CHANGE_STATUS_META: Record<ChangeRequestStatus, string> = {
+  'Draft': 'bg-surface-container text-secondary border border-surface-container-highest',
+  'Awaiting Client': 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20',
+  'Approved': 'bg-[#065F46] text-white shadow-sm',
+  'Declined': 'bg-error/10 text-error border border-error/20',
 };
 
 const PROJECT_STATUSES: ProjectStatus[] = ['In Progress', 'On Hold', 'Completed', 'Cancelled', 'Archived'];
 
 const REJECT_REASONS = ['Too expensive', 'Takes too much time', "Don't need it anymore", 'Want something different', 'Other'];
 
-type CrTab = 'all' | ChangeRequestStatus;
+type PrimaryTab = 'requests' | 'changes';
+type RequestTab = 'all' | RequestStatus;
+type ChangeTab = 'all' | ChangeRequestStatus;
 
 type ModalKind =
   | { kind: 'add-milestone' }
   | { kind: 'edit-milestone'; milestone: Milestone }
   | { kind: 'add-deliverable'; milestoneId: string }
-  | { kind: 'add-change-request' }
+  | { kind: 'add-request' }
+  | { kind: 'create-change-proposal'; request: ChangeRequest }
   | { kind: 'add-contract-section' }
   | { kind: 'edit-contract-section'; section: ContractSection }
   | { kind: 'edit-project' }
@@ -285,7 +294,9 @@ export function ProjectViewPage({ projectId, onBack, onOpenRoom }: { projectId: 
   const [editingDeliverableText, setEditingDeliverableText] = useState('');
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
-  const [crTab, setCrTab] = useState<CrTab>('all');
+  const [primaryTab, setPrimaryTab] = useState<PrimaryTab>('requests');
+  const [requestTab, setRequestTab] = useState<RequestTab>('all');
+  const [changeTab, setChangeTab] = useState<ChangeTab>('all');
   const [copied, setCopied] = useState(false);
   const [roomToken] = useState(CLIENT_ROOM_TOKENS[projectId] ?? 'xxxxxxxxxxxx');
   const [checking, setChecking] = useState<string | null>(null);
@@ -480,20 +491,13 @@ export function ProjectViewPage({ projectId, onBack, onOpenRoom }: { projectId: 
     );
   };
 
-  // --- Change requests -----------------------------------------------------
-  const openAddChangeRequest = () => {
-    setDraft({
-      title: '',
-      description: '',
-      source: 'Client',
-      scopeDecision: 'Needs Review',
-      extraTimeDays: '',
-      priceAdjustment: '',
-    });
-    setModal({ kind: 'add-change-request' });
+  // --- Requests & Changes ---------------------------------------------------
+  const openAddRequest = () => {
+    setDraft({ title: '', description: '', source: 'Client' });
+    setModal({ kind: 'add-request' });
   };
 
-  const addChangeRequest = () => {
+  const addRequest = () => {
     const title = draft.title?.trim();
     if (!title) return;
     const request: ChangeRequest = {
@@ -502,18 +506,57 @@ export function ProjectViewPage({ projectId, onBack, onOpenRoom }: { projectId: 
       title,
       description: draft.description?.trim() || '',
       source: (draft.source as ChangeRequest['source']) || 'Client',
-      scopeDecision: (draft.scopeDecision as ChangeScopeDecision) || 'Needs Review',
-      status: 'Pending',
-      extraTimeDays: Number(draft.extraTimeDays) || 0,
-      priceAdjustment: Number(draft.priceAdjustment) || 0,
+      scopeDecision: 'Needs Review',
+      kind: 'request',
+      requestStatus: 'Needs Review',
+      extraTimeDays: 0,
+      priceAdjustment: 0,
       dateRequested: new Date().toISOString().slice(0, 10),
     };
     pushChangeRequest(request);
-    updateProject(projectMeta.id, { pendingOutOfScopeRequests: projectMeta.pendingOutOfScopeRequests + 1 });
     logActivity(projectMeta.id, {
       type: 'change-request',
-      title: `Change request added: "${title}"`,
+      title: `New request: "${title}"`,
       description: draft.description?.trim() || undefined,
+    });
+    closeModal();
+  };
+
+  const openCreateChangeProposal = (request: ChangeRequest) => {
+    setDraft({
+      title: `${request.title} — change proposal`,
+      description: '',
+      extraTimeDays: '',
+      priceAdjustment: '',
+    });
+    setModal({ kind: 'create-change-proposal', request });
+  };
+
+  const createChangeProposal = () => {
+    if (!modal || modal.kind !== 'create-change-proposal') return;
+    const req = modal.request;
+    const title = draft.title?.trim();
+    if (!title) return;
+    const change: ChangeRequest = {
+      id: `CH-${Date.now()}`,
+      projectId: projectMeta.id,
+      title,
+      description: draft.description?.trim() || '',
+      source: req.source,
+      scopeDecision: 'Out of Scope',
+      kind: 'change',
+      status: 'Draft',
+      extraTimeDays: Number(draft.extraTimeDays) || 0,
+      priceAdjustment: Number(draft.priceAdjustment) || 0,
+      dateRequested: new Date().toISOString().slice(0, 10),
+      linkedRequestId: req.id,
+    };
+    pushChangeRequest(change);
+    updateChangeRequest(req.id, { linkedChangeId: change.id });
+    logActivity(projectMeta.id, {
+      type: 'change-request',
+      title: `Change proposal created: "${title}"`,
+      description: `Linked to "${req.title}"`,
     });
     closeModal();
   };
@@ -521,7 +564,10 @@ export function ProjectViewPage({ projectId, onBack, onOpenRoom }: { projectId: 
   const runScopeCheck = (cr: ChangeRequest) => {
     setChecking(cr.id);
     runFakeScopeCheck().then((result) => {
-      updateChangeRequest(cr.id, { scopeDecision: result.decision });
+      updateChangeRequest(cr.id, {
+        scopeDecision: result.decision,
+        requestStatus: 'Reviewed',
+      });
       logActivity(projectMeta.id, {
         type: 'scope-check',
         title: `AI scope check on "${cr.title}"`,
@@ -531,14 +577,28 @@ export function ProjectViewPage({ projectId, onBack, onOpenRoom }: { projectId: 
     });
   };
 
-  const sendToClient = (cr: ChangeRequest) => {
-    updateChangeRequest(cr.id, { status: 'Sent' });
-    updateProject(projectMeta.id, {
-      pendingOutOfScopeRequests: Math.max(0, projectMeta.pendingOutOfScopeRequests - 1),
+  const reviewRequest = (cr: ChangeRequest) => {
+    updateChangeRequest(cr.id, { requestStatus: 'Reviewed' });
+    logActivity(projectMeta.id, {
+      type: 'change-request',
+      title: `Reviewed request: "${cr.title}"`,
+      description: `Scope confirmed as ${cr.scopeDecision}`,
     });
+  };
+
+  const resolveRequest = (cr: ChangeRequest) => {
+    updateChangeRequest(cr.id, { requestStatus: 'Resolved' });
+    logActivity(projectMeta.id, {
+      type: 'change-request',
+      title: `Resolved request: "${cr.title}"`,
+    });
+  };
+
+  const sendProposal = (cr: ChangeRequest) => {
+    updateChangeRequest(cr.id, { status: 'Awaiting Client' });
     logActivity(projectMeta.id, {
       type: 'request-submitted',
-      title: `Sent "${cr.title}" to the client room`,
+      title: `Sent proposal: "${cr.title}" to client`,
       description: `+$${cr.priceAdjustment.toLocaleString('en-US')} · +${cr.extraTimeDays}d`,
     });
     addMessage({
@@ -701,17 +761,30 @@ export function ProjectViewPage({ projectId, onBack, onOpenRoom }: { projectId: 
     });
   };
 
-  // --- Tabs for change requests --------------------------------------------
-  const crCounts: Record<CrTab, number> = { all: changeRequests.length, Pending: 0, Sent: 0, Accepted: 0, Rejected: 0 };
-  changeRequests.forEach((cr) => { crCounts[cr.status] += 1; });
-  const crTabs: { key: CrTab; label: string }[] = [
+  // --- Tabs for requests & changes -----------------------------------------
+  const allRequests = changeRequests.filter((cr) => cr.kind === 'request');
+  const allChanges = changeRequests.filter((cr) => cr.kind === 'change');
+
+  const reqCounts: Record<RequestTab, number> = { all: allRequests.length, 'Needs Review': 0, Reviewed: 0, Resolved: 0 };
+  allRequests.forEach((r) => { reqCounts[r.requestStatus ?? 'Needs Review'] += 1; });
+  const requestTabs: { key: RequestTab; label: string }[] = [
     { key: 'all', label: 'All' },
-    { key: 'Pending', label: 'Pending' },
-    { key: 'Sent', label: 'Sent' },
-    { key: 'Accepted', label: 'Accepted' },
-    { key: 'Rejected', label: 'Rejected' },
+    { key: 'Needs Review', label: 'Needs Review' },
+    { key: 'Reviewed', label: 'Reviewed' },
+    { key: 'Resolved', label: 'Resolved' },
   ];
-  const visibleRequests = crTab === 'all' ? changeRequests : changeRequests.filter((cr) => cr.status === crTab);
+  const visibleRequests = requestTab === 'all' ? allRequests : allRequests.filter((r) => (r.requestStatus ?? 'Needs Review') === requestTab);
+
+  const chgCounts: Record<ChangeTab, number> = { all: allChanges.length, Draft: 0, 'Awaiting Client': 0, Approved: 0, Declined: 0 };
+  allChanges.forEach((c) => { chgCounts[c.status ?? 'Draft'] += 1; });
+  const changeTabs: { key: ChangeTab; label: string }[] = [
+    { key: 'all', label: 'All' },
+    { key: 'Draft', label: 'Draft' },
+    { key: 'Awaiting Client', label: 'Awaiting Client' },
+    { key: 'Approved', label: 'Approved' },
+    { key: 'Declined', label: 'Declined' },
+  ];
+  const visibleChanges = changeTab === 'all' ? allChanges : allChanges.filter((c) => (c.status ?? 'Draft') === changeTab);
 
   const projectDeadlineMeta = projectMeta.deadline
     ? (() => {
@@ -764,8 +837,8 @@ export function ProjectViewPage({ projectId, onBack, onOpenRoom }: { projectId: 
 
         {/* Actions */}
         <div className="mt-5 pt-5 border-t border-surface-container-highest flex flex-wrap items-center gap-2.5">
-          <button onClick={openAddChangeRequest} className={btnGhost}>
-            <Plus className="w-4 h-4" />Add Change Request
+          <button onClick={openAddRequest} className={btnGhost}>
+            <Plus className="w-4 h-4" />Add Request
           </button>
           <button onClick={() => onOpenRoom(projectId)} className={btnPrimary}>
             <Users className="w-4 h-4" />Open Client Room
@@ -1073,111 +1146,240 @@ export function ProjectViewPage({ projectId, onBack, onOpenRoom }: { projectId: 
           )}
         </section>
 
-        {/* Change Requests */}
+        {/* Requests & Changes */}
         <section>
           <div className="flex items-center justify-between gap-3 mb-6">
-            <h3 className="font-h3 text-on-surface">Change Requests</h3>
-            <button onClick={openAddChangeRequest} className={btnGhostSm}>
-              <Plus className="w-4 h-4" />Add Change Request
+            <h3 className="font-h3 text-on-surface">Requests & Changes</h3>
+            <button onClick={openAddRequest} className={btnGhostSm}>
+              <Plus className="w-4 h-4" />Add Request
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-2 mb-6">
-            {crTabs.map((t) => (
+          {/* Primary tabs */}
+          <div className="flex gap-1 p-1 bg-surface-container-low rounded-xl mb-6 w-fit">
+            {([
+              { key: 'requests' as PrimaryTab, label: 'Requests', count: allRequests.length },
+              { key: 'changes' as PrimaryTab, label: 'Changes', count: allChanges.length },
+            ]).map((t) => (
               <button
                 key={t.key}
-                onClick={() => setCrTab(t.key)}
-                className={`px-3.5 py-2 rounded-full text-xs font-bold transition-colors ${
-                  crTab === t.key
-                    ? 'bg-primary text-on-primary shadow-sm'
-                    : 'bg-surface-container-lowest border border-surface-container-highest text-secondary hover:text-on-surface'
+                onClick={() => setPrimaryTab(t.key)}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+                  primaryTab === t.key
+                    ? 'bg-surface-container-lowest text-on-surface shadow-sm'
+                    : 'text-secondary hover:text-on-surface'
                 }`}
               >
-                {t.label} <span className="opacity-70">{crCounts[t.key]}</span>
+                {t.label} <span className="opacity-60 ml-0.5">{t.count}</span>
               </button>
             ))}
           </div>
 
-          {visibleRequests.length === 0 ? (
-            <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-10 text-center">
-              <p className="font-medium text-on-surface">
-                No {crTab === 'all' ? '' : crTab.toLowerCase() + ' '}change requests.
-              </p>
-              <p className="font-body-sm text-secondary mt-1">Add one to start tracking a scope change.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              {visibleRequests.map((cr) => (
-                <div key={cr.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 shadow-sm flex flex-col gap-3">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${CR_DECISION_META[cr.scopeDecision]}`}>
-                      {cr.scopeDecision}
-                    </span>
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${CR_STATUS_META[cr.status]}`}>
-                      {cr.status}
-                    </span>
-                  </div>
+          {/* ── Requests tab ─────────────────────────────────────────── */}
+          {primaryTab === 'requests' && (
+            <>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {requestTabs.map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setRequestTab(t.key)}
+                    className={`px-3.5 py-2 rounded-full text-xs font-bold transition-colors ${
+                      requestTab === t.key
+                        ? 'bg-primary text-on-primary shadow-sm'
+                        : 'bg-surface-container-lowest border border-surface-container-highest text-secondary hover:text-on-surface'
+                    }`}
+                  >
+                    {t.label} <span className="opacity-70">{reqCounts[t.key]}</span>
+                  </button>
+                ))}
+              </div>
 
-                  <div>
-                    <p className="font-medium text-on-surface">{cr.title}</p>
-                    <p className="font-body-sm text-secondary mt-1 line-clamp-2">{cr.description}</p>
-                  </div>
-
-                  <p className="text-xs text-secondary">{cr.source} request · {formatDate(cr.dateRequested, true)}</p>
-
-                  {cr.status === 'Accepted' && (
-                    <div className="bg-primary/10 text-primary rounded-lg p-3 flex items-center gap-2">
-                      <Check className="w-4 h-4 shrink-0" />
-                      <p className="text-xs font-bold">
-                        Accepted{cr.clientDecision?.date ? ` · ${formatDate(cr.clientDecision.date, true)}` : ''}
-                      </p>
-                    </div>
-                  )}
-                  {cr.status === 'Rejected' && cr.clientDecision?.reason && (
-                    <div className="bg-error-container/60 text-on-error-container rounded-lg p-3">
-                      <p className="text-xs font-bold">Rejected — {cr.clientDecision.reason}</p>
-                      {cr.clientDecision.note && <p className="text-xs mt-0.5 opacity-90">{cr.clientDecision.note}</p>}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-4 pt-3 mt-auto border-t border-surface-container-highest text-xs text-secondary">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5" />+{cr.extraTimeDays} day{cr.extraTimeDays === 1 ? '' : 's'}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <Banknote className="w-3.5 h-3.5" />+{formatCurrency(cr.priceAdjustment)}
-                    </span>
-                  </div>
-
-                  {cr.status === 'Pending' && (
-                    <div className="flex flex-wrap items-center gap-2 pt-2">
-                      <button
-                        onClick={() => runScopeCheck(cr)}
-                        disabled={checking === cr.id}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-surface-container-highest bg-surface-container-low text-on-surface hover:bg-surface-container font-button text-xs shadow-sm transition-colors disabled:opacity-50"
-                      >
-                        {checking === cr.id ? (
-                          <span className="inline-flex items-center gap-1.5 text-secondary">
-                            <span className="w-3 h-3 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
-                            Checking…
-                          </span>
-                        ) : (
-                          <>
-                            <Bot className="w-4 h-4 text-primary" />Run AI check
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => sendToClient(cr)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-on-primary hover:opacity-90 font-button text-xs shadow-sm transition-all active:scale-95"
-                      >
-                        <Send className="w-4 h-4" />Send to client
-                      </button>
-                    </div>
-                  )}
+              {visibleRequests.length === 0 ? (
+                <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-10 text-center">
+                  <p className="font-medium text-on-surface">
+                    No {requestTab === 'all' ? '' : requestTab.toLowerCase() + ' '}requests.
+                  </p>
+                  <p className="font-body-sm text-secondary mt-1">Add a request to start tracking client needs.</p>
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                  {visibleRequests.map((cr) => {
+                    const reqStatus = cr.requestStatus ?? 'Needs Review';
+                    const linkedChange = cr.linkedChangeId ? changeRequests.find((c) => c.id === cr.linkedChangeId) : null;
+                    return (
+                      <div key={cr.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${CR_SCOPE_META[cr.scopeDecision]}`}>
+                            {cr.scopeDecision === 'Needs Review' ? 'Uncertain' : cr.scopeDecision}
+                          </span>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${REQUEST_STATUS_META[reqStatus]}`}>
+                            {reqStatus}
+                          </span>
+                        </div>
+
+                        <div>
+                          <p className="font-medium text-on-surface">{cr.title}</p>
+                          <p className="font-body-sm text-secondary mt-1 line-clamp-2">{cr.description}</p>
+                        </div>
+
+                        <p className="text-xs text-secondary">{cr.source} request · {formatDate(cr.dateRequested, true)}</p>
+
+                        {linkedChange && (
+                          <div className="bg-surface-container-low rounded-lg px-3 py-2 flex items-center gap-2 text-xs text-secondary">
+                            <FileText className="w-3.5 h-3.5 shrink-0" />
+                            <span>Change proposal: <span className="font-medium text-on-surface">{linkedChange.title}</span></span>
+                            <span className={`ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${CHANGE_STATUS_META[linkedChange.status ?? 'Draft']}`}>
+                              {linkedChange.status}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        {reqStatus === 'Needs Review' && (
+                          <div className="flex flex-wrap items-center gap-2 pt-2">
+                            <button
+                              onClick={() => runScopeCheck(cr)}
+                              disabled={checking === cr.id}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-surface-container-highest bg-surface-container-low text-on-surface hover:bg-surface-container font-button text-xs shadow-sm transition-colors disabled:opacity-50"
+                            >
+                              {checking === cr.id ? (
+                                <span className="inline-flex items-center gap-1.5 text-secondary">
+                                  <span className="w-3 h-3 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+                                  Checking…
+                                </span>
+                              ) : (
+                                <>
+                                  <Bot className="w-4 h-4 text-primary" />Run AI check
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => reviewRequest(cr)}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-on-primary hover:opacity-90 font-button text-xs shadow-sm transition-all active:scale-95"
+                            >
+                              <Check className="w-4 h-4" />Review
+                            </button>
+                          </div>
+                        )}
+
+                        {reqStatus === 'Reviewed' && cr.scopeDecision === 'In Scope' && !linkedChange && (
+                          <div className="flex flex-wrap items-center gap-2 pt-2">
+                            <button
+                              onClick={() => resolveRequest(cr)}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-on-primary hover:opacity-90 font-button text-xs shadow-sm transition-all active:scale-95"
+                            >
+                              <Check className="w-4 h-4" />Resolve
+                            </button>
+                          </div>
+                        )}
+
+                        {reqStatus === 'Reviewed' && cr.scopeDecision === 'Out of Scope' && !linkedChange && (
+                          <div className="flex flex-wrap items-center gap-2 pt-2">
+                            <button
+                              onClick={() => openCreateChangeProposal(cr)}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-on-primary hover:opacity-90 font-button text-xs shadow-sm transition-all active:scale-95"
+                            >
+                              <Plus className="w-4 h-4" />Create Change Proposal
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ── Changes tab ──────────────────────────────────────────── */}
+          {primaryTab === 'changes' && (
+            <>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {changeTabs.map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setChangeTab(t.key)}
+                    className={`px-3.5 py-2 rounded-full text-xs font-bold transition-colors ${
+                      changeTab === t.key
+                        ? 'bg-primary text-on-primary shadow-sm'
+                        : 'bg-surface-container-lowest border border-surface-container-highest text-secondary hover:text-on-surface'
+                    }`}
+                  >
+                    {t.label} <span className="opacity-70">{chgCounts[t.key]}</span>
+                  </button>
+                ))}
+              </div>
+
+              {visibleChanges.length === 0 ? (
+                <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-10 text-center">
+                  <p className="font-medium text-on-surface">
+                    No {changeTab === 'all' ? '' : changeTab.toLowerCase().replace('_', ' ') + ' '}changes.
+                  </p>
+                  <p className="font-body-sm text-secondary mt-1">Create a change proposal from an out-of-scope request.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                  {visibleChanges.map((cr) => {
+                    const chgStatus = cr.status ?? 'Draft';
+                    const linkedRequest = cr.linkedRequestId ? changeRequests.find((r) => r.id === cr.linkedRequestId) : null;
+                    return (
+                      <div key={cr.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${CHANGE_STATUS_META[chgStatus]}`}>
+                            {chgStatus}
+                          </span>
+                          {linkedRequest && (
+                            <span className="text-[11px] text-secondary truncate max-w-[180px]" title={linkedRequest.title}>
+                              Re: {linkedRequest.title}
+                            </span>
+                          )}
+                        </div>
+
+                        <div>
+                          <p className="font-medium text-on-surface">{cr.title}</p>
+                          <p className="font-body-sm text-secondary mt-1 line-clamp-2">{cr.description}</p>
+                        </div>
+
+                        <div className="flex items-center gap-4 text-xs text-secondary">
+                          <span className="inline-flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5" />+{cr.extraTimeDays} day{cr.extraTimeDays === 1 ? '' : 's'}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <Banknote className="w-3.5 h-3.5" />+{formatCurrency(cr.priceAdjustment)}
+                          </span>
+                        </div>
+
+                        {chgStatus === 'Approved' && (
+                          <div className="bg-primary/10 text-primary rounded-lg p-3 flex items-center gap-2">
+                            <Check className="w-4 h-4 shrink-0" />
+                            <p className="text-xs font-bold">
+                              Approved{cr.clientDecision?.date ? ` · ${formatDate(cr.clientDecision.date, true)}` : ''}
+                            </p>
+                          </div>
+                        )}
+                        {chgStatus === 'Declined' && cr.clientDecision?.reason && (
+                          <div className="bg-error-container/60 text-on-error-container rounded-lg p-3">
+                            <p className="text-xs font-bold">Declined — {cr.clientDecision.reason}</p>
+                            {cr.clientDecision.note && <p className="text-xs mt-0.5 opacity-90">{cr.clientDecision.note}</p>}
+                          </div>
+                        )}
+
+                        {chgStatus === 'Draft' && (
+                          <div className="flex flex-wrap items-center gap-2 pt-2">
+                            <button
+                              onClick={() => sendProposal(cr)}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-on-primary hover:opacity-90 font-button text-xs shadow-sm transition-all active:scale-95"
+                            >
+                              <Send className="w-4 h-4" />Send to client
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
         </section>
 
@@ -1428,10 +1630,10 @@ export function ProjectViewPage({ projectId, onBack, onOpenRoom }: { projectId: 
         </Modal>
       )}
 
-      {modal?.kind === 'add-change-request' && (
+      {modal?.kind === 'add-request' && (
         <Modal
-          title="Add Change Request"
-          subtitle="Record a scope change. AI scope analysis and the client review come next."
+          title="Add Request"
+          subtitle="Record a client request. Scope assessment and review come next."
           onClose={closeModal}
         >
           <div className="space-y-4">
@@ -1443,28 +1645,55 @@ export function ProjectViewPage({ projectId, onBack, onOpenRoom }: { projectId: 
                 className={`${inputClass} min-h-[80px] resize-y leading-relaxed`}
                 value={draft.description ?? ''}
                 onChange={(e) => patch('description', e.target.value)}
-                placeholder="What changed and what does it involve?"
+                placeholder="What did the client ask for?"
+              />
+            </Field>
+            <Field label="Source">
+              <Select value={draft.source ?? 'Client'} onChange={(v) => patch('source', v)} options={['Client', 'Team', 'AI-detected']} />
+            </Field>
+            <div className="flex justify-end gap-3 pt-2">
+              <button onClick={closeModal} className="px-4 py-2.5 font-button text-secondary hover:text-on-surface transition-colors">Cancel</button>
+              <button onClick={addRequest} className={btnPrimary}>Add request</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {modal?.kind === 'create-change-proposal' && (
+        <Modal
+          title="Create Change Proposal"
+          subtitle={`Proposed modification for: ${modal.request.title}`}
+          onClose={closeModal}
+        >
+          <div className="space-y-4">
+            <div className="bg-surface-container-low rounded-lg px-4 py-3 flex items-center gap-3">
+              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${CR_SCOPE_META[modal.request.scopeDecision]}`}>
+                {modal.request.scopeDecision === 'Needs Review' ? 'Uncertain' : modal.request.scopeDecision}
+              </span>
+              <span className="text-sm text-on-surface truncate flex-1">{modal.request.title}</span>
+            </div>
+            <Field label="Proposal title">
+              <input className={inputClass} value={draft.title ?? ''} onChange={(e) => patch('title', e.target.value)} placeholder="e.g. Dark mode implementation" />
+            </Field>
+            <Field label="Description of proposed work">
+              <textarea
+                className={`${inputClass} min-h-[80px] resize-y leading-relaxed`}
+                value={draft.description ?? ''}
+                onChange={(e) => patch('description', e.target.value)}
+                placeholder="What does this change involve?"
               />
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Source">
-                <Select value={draft.source ?? 'Client'} onChange={(v) => patch('source', v)} options={['Client', 'Team', 'AI-detected']} />
-              </Field>
-              <Field label="Scope decision">
-                <Select value={draft.scopeDecision ?? 'Needs Review'} onChange={(v) => patch('scopeDecision', v)} options={['In Scope', 'Needs Review', 'Out of Scope']} />
-              </Field>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Added time (days)">
-                <input type="number" min="0" className={inputClass} value={draft.extraTimeDays ?? ''} onChange={(e) => patch('extraTimeDays', e.target.value)} placeholder="0" />
-              </Field>
-              <Field label="Price adjustment ($)">
+              <Field label="Additional price ($)">
                 <input type="number" min="0" className={inputClass} value={draft.priceAdjustment ?? ''} onChange={(e) => patch('priceAdjustment', e.target.value)} placeholder="0" />
+              </Field>
+              <Field label="Additional time (days)">
+                <input type="number" min="0" className={inputClass} value={draft.extraTimeDays ?? ''} onChange={(e) => patch('extraTimeDays', e.target.value)} placeholder="0" />
               </Field>
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={closeModal} className="px-4 py-2.5 font-button text-secondary hover:text-on-surface transition-colors">Cancel</button>
-              <button onClick={addChangeRequest} className={btnPrimary}>Add request</button>
+              <button onClick={createChangeProposal} className={btnPrimary}>Create proposal</button>
             </div>
           </div>
         </Modal>

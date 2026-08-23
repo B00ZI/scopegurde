@@ -69,8 +69,11 @@ export type ChangeRequestSource = 'Client' | 'Team' | 'AI-detected';
 
 export type ChangeScopeDecision = 'In Scope' | 'Needs Review' | 'Out of Scope';
 
-/** Lifecycle: Client Request → AI Scope Analysis → decision → sent to client → Accepted / Rejected. */
-export type ChangeRequestStatus = 'Pending' | 'Sent' | 'Accepted' | 'Rejected';
+/** Request lifecycle: client asked → freelancer reviews → resolved. */
+export type RequestStatus = 'Needs Review' | 'Reviewed' | 'Resolved';
+
+/** Change proposal lifecycle: drafted → sent → client decides. */
+export type ChangeRequestStatus = 'Draft' | 'Awaiting Client' | 'Approved' | 'Declined';
 
 export interface ChangeRequest {
   id: string;
@@ -79,16 +82,32 @@ export interface ChangeRequest {
   description: string;
   source: ChangeRequestSource;
   scopeDecision: ChangeScopeDecision;
-  status: ChangeRequestStatus;
+  dateRequested: string;
+
+  /** Discriminant: is this a client request or a change proposal? */
+  kind: 'request' | 'change';
+
+  /** Request lifecycle status (only meaningful when kind === 'request'). */
+  requestStatus?: RequestStatus;
+
+  /** Change proposal lifecycle status (only meaningful when kind === 'change'). */
+  status?: ChangeRequestStatus;
+
+  /** Price adjustment proposed in a change proposal. */
   extraTimeDays: number;
   priceAdjustment: number;
-  dateRequested: string;
-  /** Client's answer, only present once they decide. */
+
+  /** Client's answer, only present on changes once they decide. */
   clientDecision?: {
     date: string;
     reason?: string;
     note?: string;
   };
+
+  /** On requests: id of the change proposal created from this request. */
+  linkedChangeId?: string;
+  /** On changes: id of the original request this change was created from. */
+  linkedRequestId?: string;
 }
 
 export interface ContractSection {

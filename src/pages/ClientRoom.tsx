@@ -56,14 +56,14 @@ export function ClientRoomPage({ projectId, onExit }: ClientRoomProps) {
   const done = project.milestones.filter((m) => m.status === 'Done').length;
   const total = project.milestones.length;
   const pct = total ? Math.round((done / total) * 100) : 0;
-  const pendingDecisions = changeRequests.filter((cr) => cr.status === 'Sent');
+  const pendingDecisions = changeRequests.filter((cr) => cr.kind === 'change' && cr.status === 'Awaiting Client');
 
   const totalValue = project.basePrice + project.outOfScopeAdded;
 
   const decide = (id: string, accept: boolean) => {
     const cr = changeRequests.find((c) => c.id === id);
     updateChangeRequest(id, {
-      status: accept ? 'Accepted' : 'Rejected',
+      status: accept ? 'Approved' : 'Declined',
       clientDecision: {
         date: nowDate(),
         reason: accept ? undefined : 'Not needed',
@@ -93,7 +93,8 @@ export function ClientRoomPage({ projectId, onExit }: ClientRoomProps) {
       description: reqDesc.trim() || '',
       source: 'Client',
       scopeDecision: 'Needs Review',
-      status: 'Pending',
+      kind: 'request',
+      requestStatus: 'Needs Review',
       extraTimeDays: 0,
       priceAdjustment: 0,
       dateRequested: nowDate(),

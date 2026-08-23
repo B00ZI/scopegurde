@@ -98,7 +98,7 @@ export function DashboardPage({
     [activeProjects]
   );
   const waitingForClient = useMemo(
-    () => allChangeRequests.filter((cr) => cr.status === 'Sent').length,
+    () => allChangeRequests.filter((cr) => cr.kind === 'change' && cr.status === 'Awaiting Client').length,
     [allChangeRequests]
   );
 
