@@ -9,10 +9,10 @@ const FOOTER_LINKS = [
 export function LandingFooter() {
   return (
     <footer className="border-t border-surface-container-highest bg-surface-container-low">
-      <div className="max-w-6xl mx-auto px-5 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+      <div className="max-w-6xl mx-auto px-5 py-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div className="flex flex-col gap-1">
           <BrandMark size="sm" />
-          <p className="text-xs text-secondary mt-1">Keep client work in scope.</p>
+          <p className="text-sm text-secondary mt-1">Keep client work in scope.</p>
         </div>
 
         <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-6 gap-y-2">

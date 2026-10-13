@@ -3,14 +3,15 @@ import { Reveal, ScopePill } from './ui';
 
 export function Trust() {
   return (
-    <section className="bg-surface-container-low border-y border-surface-container-highest">
-      <div className="max-w-3xl mx-auto px-5 py-16 md:py-24 text-center">
+    <section className="relative overflow-hidden bg-surface-container-low border-y border-surface-container-highest">
+      <div className="lp-glow absolute inset-0" aria-hidden="true" />
+      <div className="relative max-w-3xl mx-auto px-5 py-20 md:py-28 text-center">
         <Reveal>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface leading-[1.15]">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-on-surface leading-[1.12]">
             AI can help review the scope.
             <br className="hidden sm:block" /> You stay in control.
           </h2>
-          <p className="mt-5 text-base sm:text-lg text-secondary leading-relaxed">
+          <p className="mt-6 text-lg sm:text-xl text-secondary leading-relaxed">
             Extraction is a draft until you say otherwise: review the milestones and rules, correct anything, and
             confirm the source of truth before the project starts. Scope suggestions inform your judgment. The final
             say is always yours.
@@ -19,7 +20,7 @@ export function Trust() {
 
         <Reveal delay={0.08}>
           <div
-            className="lp-mock mt-10 bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-5 sm:p-6 shadow-sm text-left max-w-md mx-auto"
+            className="lp-mock lp-float mt-12 bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-6 sm:p-7 shadow-sm text-left max-w-md mx-auto"
             role="img"
             aria-label="A request marked Needs Review with an AI suggestion of eighty-four percent confidence, and the Review and Run AI check actions the user chooses from."
           >

@@ -27,13 +27,13 @@ const FAQS = [
 export function Faq() {
   return (
     <section id="faq" className="lp-anchor">
-      <div className="max-w-6xl mx-auto px-5 py-16 md:py-24 grid grid-cols-1 lg:grid-cols-[4fr_8fr] gap-8 lg:gap-16 items-start">
+      <div className="max-w-6xl mx-auto px-5 py-20 md:py-28 grid grid-cols-1 lg:grid-cols-[4fr_8fr] gap-8 lg:gap-16 items-start">
         <Reveal>
           <div className="lg:sticky lg:top-24">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface leading-[1.15]">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-on-surface leading-[1.12]">
               Common questions
             </h2>
-            <p className="mt-4 text-base text-secondary leading-relaxed">
+            <p className="mt-5 text-lg text-secondary leading-relaxed">
               Straight answers about what ScopeGuard does, and what it deliberately leaves to you.
             </p>
           </div>
@@ -43,14 +43,14 @@ export function Faq() {
           <div className="border-t border-surface-container-highest">
             {FAQS.map((item) => (
               <details key={item.q} className="lp-faq group border-b border-surface-container-highest">
-                <summary className="flex items-center justify-between gap-6 py-5 text-base sm:text-lg font-semibold text-on-surface tracking-tight rounded-lg">
+                <summary className="flex items-center justify-between gap-6 py-6 text-lg sm:text-xl font-semibold text-on-surface tracking-tight rounded-lg">
                   {item.q}
                   <ChevronDown
                     className="w-5 h-5 shrink-0 text-secondary transition-transform duration-200 group-open:rotate-180"
                     aria-hidden="true"
                   />
                 </summary>
-                <p className="pb-5 pr-10 text-sm sm:text-base text-secondary leading-relaxed max-w-2xl">{item.a}</p>
+                <p className="pb-6 pr-10 text-base sm:text-lg text-secondary leading-relaxed max-w-2xl">{item.a}</p>
               </details>
             ))}
           </div>

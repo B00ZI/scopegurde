@@ -18,31 +18,32 @@ const DECISIONS = [
 
 export function RequestReview() {
   return (
-    <section className="bg-surface-container-low border-y border-surface-container-highest">
-      <div className="max-w-6xl mx-auto px-5 py-16 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+    <section className="relative overflow-hidden bg-surface-container-low border-y border-surface-container-highest">
+      <div className="lp-glow absolute inset-0" aria-hidden="true" />
+      <div className="relative max-w-6xl mx-auto px-5 py-20 md:py-28 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
         <Reveal>
           <div>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface leading-[1.15]">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-on-surface leading-[1.12]">
               Every request, checked against what you agreed.
             </h2>
-            <p className="mt-5 text-base sm:text-lg text-secondary leading-relaxed max-w-xl">
+            <p className="mt-6 text-lg sm:text-xl text-secondary leading-relaxed max-w-xl">
               A request can arrive from the client, from your own team, or from an AI check. ScopeGuard compares it
               with the contract details stored in the project and suggests how it should be treated.
             </p>
 
-            <ul className="mt-8 divide-y divide-surface-container-highest border-t border-surface-container-highest">
+            <ul className="mt-9 divide-y divide-surface-container-highest border-t border-surface-container-highest">
               {DECISIONS.map((d) => (
-                <li key={d.decision} className="py-4 flex items-start gap-4">
+                <li key={d.decision} className="py-5 flex items-start gap-4">
                   <span className="shrink-0 mt-0.5">
                     <ScopePill decision={d.decision} />
                   </span>
-                  <span className="text-sm sm:text-base text-secondary leading-relaxed">{d.text}</span>
+                  <span className="text-base lg:text-lg text-secondary leading-relaxed">{d.text}</span>
                 </li>
               ))}
             </ul>
 
-            <p className="mt-6 flex items-start gap-2.5 text-sm text-secondary leading-relaxed">
-              <Bot className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <p className="mt-7 flex items-start gap-2.5 text-base text-secondary leading-relaxed">
+              <Bot className="w-4.5 h-4.5 text-primary shrink-0 mt-0.5" />
               <span>
                 Every scope check includes the reason it found and a confidence level: suggestions for your decision,
                 not decisions made for you.
@@ -53,7 +54,7 @@ export function RequestReview() {
 
         <Reveal delay={0.08}>
           <div
-            className="lp-mock space-y-4"
+            className="lp-mock lp-float space-y-4 border border-surface-container-highest rounded-2xl p-5 sm:p-6"
             role="img"
             aria-label="A client request for an extra reporting view marked Out of Scope, an AI scope check activity entry showing eighty-four percent confidence, and the linked change proposal for two thousand two hundred dollars and five extra days, approved."
           >

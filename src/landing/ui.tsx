@@ -3,12 +3,13 @@ import type { ReactNode } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import type { ChangeScopeDecision } from '../types';
 
-/** Button recipes mirrored from the app's existing button styles (read, not modified). */
+/** Button recipes mirrored from the app's existing button styles (read, not modified),
+ *  scaled up for marketing CTAs (text-base, roomier padding). */
 export const lpBtnPrimary =
-  'inline-flex items-center justify-center gap-2 bg-primary text-on-primary font-button px-5 py-3 rounded-lg hover:opacity-90 active:scale-[0.98] transition-all shadow-sm';
+  'inline-flex items-center justify-center gap-2.5 bg-primary text-on-primary font-semibold leading-none text-base px-6 py-3.5 rounded-lg hover:opacity-90 active:scale-[0.98] transition-all shadow-sm';
 
 export const lpBtnGhost =
-  'inline-flex items-center justify-center gap-2 bg-surface-container-lowest border border-surface-container-highest text-on-surface hover:bg-surface-container font-button px-5 py-3 rounded-lg transition-colors shadow-sm';
+  'inline-flex items-center justify-center gap-2.5 bg-surface-container-lowest border border-surface-container-highest text-on-surface hover:bg-surface-container font-semibold leading-none text-base px-6 py-3.5 rounded-lg transition-colors shadow-sm';
 
 export const lpBtnSmPrimary =
   'inline-flex items-center justify-center gap-1.5 bg-primary text-on-primary font-button px-4 py-2 rounded-lg hover:opacity-90 active:scale-[0.98] transition-all shadow-sm text-sm';

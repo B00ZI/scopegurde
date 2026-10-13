@@ -7,13 +7,14 @@ import { Reveal, ScopePill } from './ui';
  */
 export function Problem() {
   return (
-    <section className="bg-surface-container-low border-y border-surface-container-highest">
-      <div className="max-w-6xl mx-auto px-5 py-16 md:py-24">
+    <section className="relative overflow-hidden bg-surface-container-low border-y border-surface-container-highest">
+      <div className="lp-dots absolute inset-0 opacity-70" aria-hidden="true" />
+      <div className="relative max-w-6xl mx-auto px-5 py-20 md:py-28">
         <Reveal className="max-w-3xl">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface leading-[1.15]">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-on-surface leading-[1.12]">
             The original agreement shouldn&rsquo;t get lost in the project.
           </h2>
-          <p className="mt-5 text-base sm:text-lg text-secondary leading-relaxed max-w-2xl">
+          <p className="mt-6 text-lg sm:text-xl text-secondary leading-relaxed max-w-2xl">
             Small requests arrive through calls and chat threads. After the third one, it is hard to remember what
             the contract actually included. ScopeGuard keeps the agreed scope beside every new request, so the
             comparison takes a minute, not a search through old emails.
@@ -23,7 +24,7 @@ export function Problem() {
         <Reveal delay={0.06} className="mt-10 md:mt-14">
           <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 md:gap-6 items-stretch lp-mock">
             {/* What we agreed */}
-            <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-5 sm:p-6 shadow-sm">
+            <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-6 sm:p-7 shadow-sm">
               <p className="font-label-caps text-secondary uppercase mb-4">What we agreed</p>
               <div data-static>
                 <p className="font-button text-on-surface mb-3">Agreed work</p>
@@ -49,7 +50,7 @@ export function Problem() {
             </div>
 
             {/* The new request */}
-            <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-5 sm:p-6 shadow-sm">
+            <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-6 sm:p-7 shadow-sm">
               <p className="font-label-caps text-secondary uppercase mb-4">The new request</p>
               <div data-static>
                 <div className="flex items-center gap-2.5 mb-3">

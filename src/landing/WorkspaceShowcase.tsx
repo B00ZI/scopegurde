@@ -118,13 +118,14 @@ function RequestCards() {
 
 export function WorkspaceShowcase() {
   return (
-    <section id="features" className="lp-anchor">
-      <div className="max-w-6xl mx-auto px-5 py-16 md:py-24">
+    <section id="features" className="lp-anchor relative overflow-hidden bg-surface-container border-y border-surface-container-highest">
+      <div className="lp-grid absolute inset-0" aria-hidden="true" />
+      <div className="relative max-w-6xl mx-auto px-5 py-20 md:py-28">
         <Reveal className="max-w-3xl">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface leading-[1.15]">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-on-surface leading-[1.12]">
             One workspace for the whole project.
           </h2>
-          <p className="mt-5 text-base sm:text-lg text-secondary leading-relaxed">
+          <p className="mt-6 text-lg sm:text-xl text-secondary leading-relaxed">
             Milestones, contract sections, requests, change proposals and project value: the agreement and the work
             side by side, in the density of a real tool.
           </p>

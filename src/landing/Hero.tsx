@@ -5,7 +5,7 @@ import { Reveal, ScopePill, SoftPill, lpBtnGhost, lpBtnPrimary } from './ui';
 function HeroMockup() {
   return (
     <div
-      className="lp-mock lp-mock-scroll relative overflow-x-auto"
+      className="lp-mock lp-mock-scroll lp-float relative overflow-x-auto rounded-2xl border border-surface-container-highest"
       role="img"
       aria-label="ScopeGuard workspace showing the Q3 Hub Rebuild project for Acme Corp, its current value of twenty thousand nine hundred dollars, milestone progress at sixty percent, and a client request for dark mode marked Out of Scope."
     >
@@ -73,23 +73,27 @@ function HeroMockup() {
 export function Hero({ onGetStarted }: { onGetStarted: () => void }) {
   return (
     <section id="top" className="relative overflow-hidden">
-      <div className="max-w-6xl mx-auto px-5 pt-12 sm:pt-16 md:pt-20 pb-16 md:pb-24 grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-10 lg:gap-14 items-center">
+      {/* Decorative layers: faint blueprint grid + restrained brand glow */}
+      <div className="lp-grid absolute inset-0" aria-hidden="true" />
+      <div className="lp-glow absolute inset-0" aria-hidden="true" />
+
+      <div className="relative max-w-6xl mx-auto px-5 pt-14 sm:pt-16 md:pt-24 pb-20 md:pb-28 grid grid-cols-1 lg:grid-cols-[52fr_48fr] gap-12 lg:gap-16 items-center">
         <Reveal>
           <div>
             <p className="font-label-caps text-primary uppercase">Client projects, with clear boundaries</p>
-            <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05] text-on-surface max-w-xl">
+            <h1 className="mt-5 text-[2.75rem] sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.04] text-on-surface max-w-2xl">
               Keep client work in scope.
             </h1>
-            <p className="mt-5 text-base sm:text-lg text-secondary leading-relaxed max-w-xl">
-              Compare new requests against the original agreement, spot potential scope changes, and keep every
-              decision organized in one place.
+            <p className="mt-6 text-lg sm:text-xl text-secondary leading-relaxed max-w-xl">
+              Compare new requests against the original agreement, spot scope changes, and keep every decision
+              organized in one place.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-9 flex flex-wrap items-center gap-3.5">
               <button onClick={onGetStarted} className={lpBtnPrimary}>
-                Get started <ArrowRight className="w-4 h-4" />
+                Get started <ArrowRight className="w-4.5 h-4.5" />
               </button>
               <a href="#how-it-works" className={lpBtnGhost}>
-                <Sparkles className="w-4 h-4 text-primary" /> See how it works
+                <Sparkles className="w-4.5 h-4.5 text-primary" /> See how it works
               </a>
             </div>
           </div>
