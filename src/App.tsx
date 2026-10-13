@@ -17,6 +17,7 @@ import { NewProjectPage } from './pages/NewProject';
 import { ClientRoomPage } from './pages/ClientRoom';
 import { Client } from './types';
 import { useProjects } from './lib/appStore';
+import { LandingPage } from './landing/LandingPage';
 
 /**
  * ENTRY POINT & MAIN LAYOUT CONTROLLER
@@ -33,6 +34,11 @@ export default function App() {
   // --- AUTHENTICATION STATE ---
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authView, setAuthView] = useState<'login' | 'signup'>('login');
+
+  // --- MARKETING LANDING (public, pre-auth) ---
+  // Isolated: only rendered when signed out; entering the auth flow hides it,
+  // and logging out returns to the sign-in screen exactly as before.
+  const [showLanding, setShowLanding] = useState(true);
 
   // --- NAVIGATION & ROUTING STATE ---
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -167,6 +173,23 @@ export default function App() {
    */
   if (clientRoomProjectId || currentPage === 'approval') {
     return <>{renderContent()}</>;
+  }
+
+  // Marketing landing page. Priority is strict: public room/approval routes
+  // above always win; the auth screens below are reached via its CTAs.
+  if (!isAuthenticated && showLanding) {
+    return (
+      <LandingPage
+        onGetStarted={() => {
+          setAuthView('signup');
+          setShowLanding(false);
+        }}
+        onSignIn={() => {
+          setAuthView('login');
+          setShowLanding(false);
+        }}
+      />
+    );
   }
 
   // Authentication Guard

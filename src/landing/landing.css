@@ -1,0 +1,78 @@
+/**
+ * LANDING-PAGE-ONLY STYLES
+ *
+ * Everything here is prefixed with `.lp-` and only applies inside the
+ * landing root element. This file must never define or override app-wide
+ * selectors, theme tokens, or component styles used by the dashboard.
+ * Theme colors come from the existing tokens in src/index.css (read-only).
+ */
+
+/* Visible keyboard focus, scoped to the landing page only */
+.lp-root :focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Anchor targets clear the sticky nav */
+.lp-anchor {
+  scroll-margin-top: 6rem;
+}
+
+/* Restrained dotted texture behind the hero visual (decorative only) */
+.lp-dots {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--outline-variant) 55%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+}
+
+/* FAQ: native details/summary without default marker */
+.lp-faq,
+.lp-faq summary {
+  list-style: none;
+}
+.lp-faq summary {
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.lp-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Thin scrollbar for mockups that scroll horizontally on small screens */
+.lp-mock-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--outline-variant) transparent;
+}
+.lp-mock-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.lp-mock-scroll::-webkit-scrollbar-thumb {
+  background: var(--outline-variant);
+  border-radius: 999px;
+}
+.lp-mock-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Product mockups are static illustrations */
+.lp-mock [data-static] {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Motion is optional and never required to read the page */
+@media (prefers-reduced-motion: reduce) {
+  .lp-root *,
+  .lp-root *::before,
+  .lp-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
