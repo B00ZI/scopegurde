@@ -5,6 +5,7 @@ import { Problem } from './Problem';
 import { HowItWorks } from './HowItWorks';
 import { WorkspaceShowcase } from './WorkspaceShowcase';
 import { RequestReview } from './RequestReview';
+import { ClientRoom } from './ClientRoom';
 import { Benefits } from './Benefits';
 import { Trust } from './Trust';
 import { Faq } from './Faq';
@@ -37,6 +38,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
         <HowItWorks />
         <WorkspaceShowcase />
         <RequestReview />
+        <ClientRoom />
         <Benefits />
         <Trust />
         <Faq />

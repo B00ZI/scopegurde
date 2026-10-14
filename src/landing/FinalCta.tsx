@@ -13,7 +13,7 @@ export function FinalCta({ onGetStarted }: { onGetStarted: () => void }) {
                 Start your next project with a clearer scope.
               </h2>
               <p className="mt-5 text-lg sm:text-xl text-on-primary/85 leading-relaxed max-w-xl mx-auto">
-                Add your project, paste the agreement, and review what ScopeGuard finds.
+                Add your project, paste the contract, and see what ScopeGuard finds.
               </p>
               <button
                 onClick={onGetStarted}

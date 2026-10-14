@@ -15,9 +15,9 @@ export function Problem() {
             The original agreement shouldn&rsquo;t get lost in the project.
           </h2>
           <p className="mt-6 text-lg sm:text-xl text-secondary leading-relaxed max-w-2xl">
-            Small requests arrive through calls and chat threads. After the third one, it is hard to remember what
-            the contract actually included. ScopeGuard keeps the agreed scope beside every new request, so the
-            comparison takes a minute, not a search through old emails.
+            It starts small. &ldquo;Can we also add this?&rdquo; shows up in chat, and you are not sure if the
+            contract covers it. Say yes too often and you end up working for free. ScopeGuard keeps the contract
+            beside every new request, so you can check in seconds.
           </p>
         </Reveal>
 
@@ -73,7 +73,10 @@ export function Problem() {
 
         <Reveal delay={0.1} className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm text-secondary">
           <ScopePill decision="Needs Review" />
-          <span>The request, checked against what you agreed. The decision stays yours.</span>
+          <span>
+            ScopeGuard checks each request and tells you if it is in or out of scope. If it is not sure, it asks for
+            your review. The decision is always yours.
+          </span>
         </Reveal>
       </div>
     </section>

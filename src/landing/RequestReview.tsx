@@ -4,15 +4,15 @@ import { Reveal, ScopePill, SoftPill } from './ui';
 const DECISIONS = [
   {
     decision: 'In Scope' as const,
-    text: 'Inside the agreed deliverables. Handle it and resolve the request.',
+    text: 'Inside the agreement, so just do the work.',
   },
   {
     decision: 'Out of Scope' as const,
-    text: 'Not in the agreement. Turn it into a change proposal with your own price and timeline.',
+    text: 'Not in the agreement. Quote it as a change with your own price and timeline.',
   },
   {
     decision: 'Needs Review' as const,
-    text: 'Partially overlaps the agreement. You make the call.',
+    text: 'Only partly covered. Look closer, then you decide.',
   },
 ];
 
@@ -27,8 +27,8 @@ export function RequestReview() {
               Every request, checked against what you agreed.
             </h2>
             <p className="mt-6 text-lg sm:text-xl text-secondary leading-relaxed max-w-xl">
-              A request can arrive from the client, from your own team, or from an AI check. ScopeGuard compares it
-              with the contract details stored in the project and suggests how it should be treated.
+              Requests come from your client, from your own team, or from the AI check. ScopeGuard compares each one
+              with the contract saved in the project and suggests what it is.
             </p>
 
             <ul className="mt-9 divide-y divide-surface-container-highest border-t border-surface-container-highest">
@@ -45,8 +45,7 @@ export function RequestReview() {
             <p className="mt-7 flex items-start gap-2.5 text-base text-secondary leading-relaxed">
               <Bot className="w-4.5 h-4.5 text-primary shrink-0 mt-0.5" />
               <span>
-                Every scope check includes the reason it found and a confidence level: suggestions for your decision,
-                not decisions made for you.
+                Every AI check shows its reason and a confidence level. It is a suggestion. You make the call.
               </span>
             </p>
           </div>

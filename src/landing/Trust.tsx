@@ -12,9 +12,8 @@ export function Trust() {
             <br className="hidden sm:block" /> You stay in control.
           </h2>
           <p className="mt-6 text-lg sm:text-xl text-secondary leading-relaxed">
-            Extraction is a draft until you say otherwise: review the milestones and rules, correct anything, and
-            confirm the source of truth before the project starts. Scope suggestions inform your judgment. The final
-            say is always yours.
+            ScopeGuard reads your contract and suggests an answer for every request. Nothing is sent to your client, and
+            nothing is saved or approved without you. You make the final call.
           </p>
         </Reveal>
 

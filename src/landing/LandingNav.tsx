@@ -11,6 +11,7 @@ interface LandingNavProps {
 const NAV_LINKS = [
   { href: '#how-it-works', label: 'How it works' },
   { href: '#features', label: 'Features' },
+  { href: '#client-room', label: 'Client room' },
   { href: '#faq', label: 'FAQ' },
 ];
 

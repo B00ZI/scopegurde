@@ -3,16 +3,16 @@ import { Reveal, ScopePill } from './ui';
 
 const STEPS = [
   {
-    title: 'Add the agreement',
-    body: 'Start a project and provide its contract or agreed scope. Paste the text you already have.',
+    title: 'Paste your contract',
+    body: 'Start a project and paste the contract you already have. ScopeGuard pulls out the milestones, prices and rules.',
   },
   {
-    title: 'Review the scope',
-    body: 'Check the extracted milestones and rules, correct anything that needs editing, and confirm the source of truth.',
+    title: 'Check what we found',
+    body: 'Review the extracted milestones and rules, fix anything wrong, and confirm them. Nothing is saved until you approve it.',
   },
   {
-    title: 'Evaluate new requests',
-    body: 'Compare a client request with the confirmed scope, then decide whether it is included or needs a change discussion.',
+    title: 'Check every request',
+    body: 'When a new request comes in, compare it with your confirmed contract. You decide if it is included, quoted, or talked through.',
   },
 ];
 
@@ -93,7 +93,7 @@ export function HowItWorks() {
             Three steps from agreement to decision.
           </h2>
           <p className="mt-6 text-lg sm:text-xl text-secondary leading-relaxed">
-            The contract you already have becomes the reference point every request is measured against.
+            Your contract becomes the reference point every new request is checked against.
           </p>
         </Reveal>
 

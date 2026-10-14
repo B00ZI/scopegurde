@@ -4,23 +4,27 @@ import { Reveal } from './ui';
 const FAQS = [
   {
     q: 'What is ScopeGuard?',
-    a: 'A project workspace for keeping client work aligned with the original agreement. You add a project and its contract, confirm the scope ScopeGuard extracts from it, and review every new request against that scope.',
+    a: 'A workspace for client projects. You add the contract, check what ScopeGuard found in it, and compare every new request against it.',
   },
   {
     q: 'How does it compare a request with the agreed scope?',
-    a: 'Open a request and run an AI check. ScopeGuard reads the contract details stored in the project and suggests one of three classifications (In Scope, Out of Scope, or Needs Review), along with the reasoning and a confidence level.',
+    a: 'Open the request and run an AI check. It reads the contract saved in the project and suggests In Scope, Out of Scope, or Needs Review, with the reason and a confidence level.',
   },
   {
     q: 'Can I review extracted contract details?',
-    a: 'Yes. When you create a project, ScopeGuard shows what it found: milestones, deliverables, payment terms and scope rules. Every field is editable, and nothing is saved until you confirm it.',
+    a: 'Yes. You see every milestone, price and rule it found. Everything is editable, and nothing is saved until you confirm it.',
+  },
+  {
+    q: 'Can my client see the project?',
+    a: 'Yes. Share the client room link and they see progress, milestones and value, approve or decline your change proposals, and send new requests. No account needed.',
   },
   {
     q: 'Does ScopeGuard make the final decision for me?',
-    a: 'No. Classifications are suggestions to inform your judgment. You decide whether a request is handled within the agreed scope, turned into a change proposal, or discussed further with the client.',
+    a: 'No. The classification is only a suggestion. You decide whether to do the work, quote a change, or talk it through with the client.',
   },
   {
     q: 'Who is it designed for?',
-    a: 'Freelancers and small agencies who deliver client projects (developers, designers, consultants) and need a clear record of what was agreed.',
+    a: 'Freelancers and small agencies who deliver client projects and want a clear record of what was agreed.',
   },
 ];
 

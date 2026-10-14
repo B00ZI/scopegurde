@@ -126,18 +126,18 @@ export function WorkspaceShowcase() {
             One workspace for the whole project.
           </h2>
           <p className="mt-6 text-lg sm:text-xl text-secondary leading-relaxed">
-            Milestones, contract sections, requests, change proposals and project value: the agreement and the work
-            side by side, in the density of a real tool.
+            Budget, milestones, requests and the contract itself, all on one screen. Every request sits right next
+            to the part of the agreement it is measured against.
           </p>
         </Reveal>
 
         <Reveal delay={0.06} className="mt-10 md:mt-14">
           <div
-            className="lp-mock lp-mock-scroll overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0"
+            className="lp-mock lp-mock-scroll overflow-x-auto"
             role="img"
             aria-label="ScopeGuard project workspace for Q3 Hub Rebuild with client Acme Corp, current value twenty thousand nine hundred dollars, three of five milestones done, three change requests with scope labels, and contract sections."
           >
-            <div className="min-w-[46rem] space-y-5" data-static>
+            <div className="space-y-5" data-static>
               {/* Project summary */}
               <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-7 shadow-sm">
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
@@ -164,10 +164,10 @@ export function WorkspaceShowcase() {
                 </div>
 
                 <div className="mt-5 pt-5 border-t border-surface-container-highest flex flex-wrap items-center gap-2.5">
-                  <span className="inline-flex items-center gap-2 bg-surface-container-lowest border border-surface-container-highest text-on-surface font-button px-4 py-2.5 rounded-lg shadow-sm text-sm">
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap bg-surface-container-lowest border border-surface-container-highest text-on-surface font-button px-4 py-2.5 rounded-lg shadow-sm text-sm">
                     <Plus className="w-4 h-4" /> Add Request
                   </span>
-                  <span className="inline-flex items-center gap-2 bg-primary text-on-primary font-button px-4 py-2.5 rounded-lg shadow-sm text-sm">
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap bg-primary text-on-primary font-button px-4 py-2.5 rounded-lg shadow-sm text-sm">
                     <Users className="w-4 h-4" /> Open Client Room
                   </span>
                   <span className="p-2.5 rounded-lg border border-surface-container-highest bg-surface-container-lowest text-secondary">
@@ -181,12 +181,12 @@ export function WorkspaceShowcase() {
 
               {/* Milestones */}
               <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-5 sm:p-7 shadow-sm">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <p className="text-lg font-semibold text-on-surface tracking-tight">Milestones</p>
                     <span className="text-xs text-secondary font-medium">3 of 5 done</span>
                   </div>
-                  <span className="inline-flex items-center gap-2 bg-surface-container-lowest border border-surface-container-highest text-on-surface font-button px-3.5 py-2 rounded-lg shadow-sm text-xs">
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap bg-surface-container-lowest border border-surface-container-highest text-on-surface font-button px-3.5 py-2 rounded-lg shadow-sm text-xs">
                     <Plus className="w-4 h-4" /> Add Milestone
                   </span>
                 </div>
@@ -220,9 +220,9 @@ export function WorkspaceShowcase() {
 
               {/* Requests & Changes */}
               <div>
-                <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <p className="text-lg font-semibold text-on-surface tracking-tight">Requests &amp; Changes</p>
-                  <span className="inline-flex items-center gap-2 bg-surface-container-lowest border border-surface-container-highest text-on-surface font-button px-3.5 py-2 rounded-lg shadow-sm text-xs">
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap bg-surface-container-lowest border border-surface-container-highest text-on-surface font-button px-3.5 py-2 rounded-lg shadow-sm text-xs">
                     <Plus className="w-4 h-4" /> Add Request
                   </span>
                 </div>
@@ -239,13 +239,13 @@ export function WorkspaceShowcase() {
 
               {/* Contract details */}
               <div>
-                <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <p className="text-lg font-semibold text-on-surface tracking-tight">Contract Details</p>
-                  <span className="inline-flex items-center gap-2 bg-surface-container-lowest border border-surface-container-highest text-secondary font-button px-3.5 py-2 rounded-lg shadow-sm text-xs">
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap bg-surface-container-lowest border border-surface-container-highest text-secondary font-button px-3.5 py-2 rounded-lg shadow-sm text-xs">
                     <FileText className="w-4 h-4" /> View Original Contract
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {CONTRACT_SECTIONS.map((sec) => (
                     <div
                       key={sec.title}
@@ -266,12 +266,6 @@ export function WorkspaceShowcase() {
               </div>
             </div>
           </div>
-        </Reveal>
-
-        <Reveal delay={0.1}>
-          <p className="mt-5 text-xs text-secondary sm:hidden text-center">
-            Swipe to explore the workspace.
-          </p>
         </Reveal>
       </div>
     </section>

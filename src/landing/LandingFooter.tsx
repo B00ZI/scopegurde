@@ -3,6 +3,7 @@ import { BrandMark } from './ui';
 const FOOTER_LINKS = [
   { href: '#how-it-works', label: 'How it works' },
   { href: '#features', label: 'Features' },
+  { href: '#client-room', label: 'Client room' },
   { href: '#faq', label: 'FAQ' },
 ];
 

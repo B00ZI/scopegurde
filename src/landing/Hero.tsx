@@ -76,8 +76,19 @@ export function Hero({ onGetStarted }: { onGetStarted: () => void }) {
       {/* Decorative layers: faint blueprint grid + restrained brand glow */}
       <div className="lp-grid absolute inset-0" aria-hidden="true" />
       <div className="lp-glow absolute inset-0" aria-hidden="true" />
+      <div className="lp-glow-bottom absolute inset-x-0 bottom-0 h-2/3" aria-hidden="true" />
 
-      <div className="relative max-w-6xl mx-auto px-5 pt-14 sm:pt-16 md:pt-24 pb-20 md:pb-28 grid grid-cols-1 lg:grid-cols-[52fr_48fr] gap-12 lg:gap-16 items-center">
+      {/* Giant ScopeGuard wordmark, gradient-filled so it belongs to the background */}
+      <div
+        className="pointer-events-none select-none absolute inset-x-0 bottom-0 flex justify-center overflow-hidden"
+        aria-hidden="true"
+      >
+        <span className="lp-hero-wordmark font-semibold uppercase tracking-tighter leading-none whitespace-nowrap text-[clamp(3.25rem,14vw,13rem)]">
+          ScopeGuard
+        </span>
+      </div>
+
+      <div className="relative max-w-6xl mx-auto px-5 pt-14 sm:pt-16 md:pt-24 pb-56 md:pb-80 grid grid-cols-1 lg:grid-cols-[52fr_48fr] gap-12 lg:gap-16 items-center">
         <Reveal>
           <div>
             <p className="font-label-caps text-primary uppercase">Client projects, with clear boundaries</p>
@@ -85,8 +96,7 @@ export function Hero({ onGetStarted }: { onGetStarted: () => void }) {
               Keep client work in scope.
             </h1>
             <p className="mt-6 text-lg sm:text-xl text-secondary leading-relaxed max-w-xl">
-              Compare new requests against the original agreement, spot scope changes, and keep every decision
-              organized in one place.
+              ScopeGuard keeps your contract next to your project, so you always know what a new request costs you.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3.5">
               <button onClick={onGetStarted} className={lpBtnPrimary}>

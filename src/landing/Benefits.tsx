@@ -30,7 +30,7 @@ export function Benefits() {
                   One reference for the agreement
                 </h3>
                 <p className="mt-3 text-base sm:text-lg text-secondary leading-relaxed">
-                  Milestones, payment terms and scope rules stay attached to the project, editable whenever you are.
+                  Your milestones, prices and scope rules live with the project, and you can edit them any time.
                 </p>
               </div>
             </div>
@@ -44,7 +44,7 @@ export function Benefits() {
                 Clear request classification
               </h3>
               <p className="mt-3 text-base sm:text-lg text-secondary leading-relaxed">
-                Included work, potential scope changes and uncertain cases, separated at a glance.
+                Three labels tell you at a glance: do it, quote it, or look closer.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 <ScopePill decision="In Scope" />
@@ -64,7 +64,7 @@ export function Benefits() {
                   You stay the decision-maker
                 </h3>
                 <p className="mt-3 text-base sm:text-lg text-secondary leading-relaxed">
-                  Every suggestion lands in your review. Nothing is sent to a client or approved without you.
+                  Nothing goes to your client and nothing is approved until you say so.
                 </p>
               </div>
             </div>
@@ -78,7 +78,7 @@ export function Benefits() {
                 A clearer change history
               </h3>
               <p className="mt-3 text-base sm:text-lg text-secondary leading-relaxed">
-                Requests, proposals and client decisions are logged in the project activity.
+                Every request, proposal and client decision is logged in one timeline.
               </p>
               <ul className="mt-5 space-y-2">
                 {ACTIVITY_LINES.map((line) => (
