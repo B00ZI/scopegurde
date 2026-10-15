@@ -56,7 +56,6 @@ email delivery of client links). The frontend is built to plug into it: one stat
 ## Tech
 
 Vite 6 · React 19 · TypeScript · Tailwind CSS 4 · motion · lucide-react ·
-`@google/genai` (Gemini Flash)
 
 ## Run it
 
@@ -89,5 +88,4 @@ src/types.ts        The data model: Project, ChangeRequest, Milestone, Client…
 
 ---
 
-*Generated from the Google AI Studio app template; since then it's grown its own landing
-page, a full project/scope domain model, and the client-room flow.*
+
